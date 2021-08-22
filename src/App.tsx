@@ -52,6 +52,7 @@ import {LiquidityPoolCard} from "./components/LiquidityCard";
 import CardContainer from "./components/CardContainer";
 import ConfirmationDialog from "./components/ConfirmationDialog";
 import DialogAmount from "./components/DialogAmount";
+import {BscConnector} from "@binance-chain/bsc-connector";
 
 export let themeOptions = createTheme({
   palette: {
@@ -946,6 +947,9 @@ class App extends React.Component<any, any> {
   public getProviderOptions = () => {
     const providerOptions = {
 
+      bsc: {
+        package: BscConnector
+      }
     };
     return providerOptions;
   };

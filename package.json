@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@aguycalled/web3modal": "^1.9.5",
+    "@aguycalled/web3modal": "^1.9.7",
     "@binance-chain/bsc-connector": "^1.0.0",
     "@emotion/babel-plugin": "^11.3.0",
     "@emotion/react": "^11.4.1",

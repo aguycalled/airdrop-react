@@ -41,7 +41,6 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
                 easing: theme.transitions.easing.easeOut,
                 duration: theme.transitions.duration.enteringScreen,
             }),
-            marginLeft: drawerWidth,
         }),
         height: '100vh',
         paddingBottom: '130px',
@@ -58,8 +57,6 @@ const AppBar = styled(MuiAppBar, {
         duration: theme.transitions.duration.leavingScreen,
     }),
     ...(open && {
-        width: `calc(100% - ${drawerWidth}px)`,
-        marginLeft: `${drawerWidth}px`,
         transition: theme.transitions.create(['margin', 'width'], {
             easing: theme.transitions.easing.easeOut,
             duration: theme.transitions.duration.enteringScreen,
@@ -84,8 +81,6 @@ const Footer = styled('div', { shouldForwardProp: (prop) => prop !== 'open' })<{
         duration: theme.transitions.duration.leavingScreen,
     }),
     ...(open && {
-        width: `calc(100% - ${drawerWidth}px)`,
-        marginLeft: `${drawerWidth}px`,
         transition: theme.transitions.create(['margin', 'width'], {
             easing: theme.transitions.easing.easeOut,
             duration: theme.transitions.duration.enteringScreen,
@@ -124,7 +119,7 @@ export default function PersistentDrawerLeft(props: any) {
                         aria-label="open drawer"
                         onClick={handleDrawerOpen}
                         edge="start"
-                        sx={{ mr: 2, ...(open && { display: 'none' }) }}
+                        sx={{ mr: 2 }}
                     >
                         <MenuIcon />
                     </IconButton>
@@ -143,7 +138,6 @@ export default function PersistentDrawerLeft(props: any) {
                         boxSizing: 'border-box',
                     },
                 }}
-                variant="persistent"
                 anchor="left"
                 open={open}
             >
