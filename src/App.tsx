@@ -335,6 +335,8 @@ function initWeb3(provider: any) {
 }
 
 function getBridgeData(chainId: number) {
+  if (!isValidChain(chainId)) return {coldScriptHash: '', stakingScriptHash: '', blockNumber: -1};
+
   let coldAddresses = [];
   let conf = BRIDGE_CONFIG
 
@@ -410,7 +412,7 @@ class App extends React.Component<any, any> {
     const bridgeData : IBridgeData = getBridgeData(chainId);
     bridgeData.blockNumber = (await this.electrumClient.blockchain_headers_subscribe()).height;
 
-    let is_registered = await callIsRegistered(address, chainId, web3)
+    let is_registered = validChain ? await callIsRegistered(address, chainId, web3) : false
 
     let added_assets: any = (await localforage.getItem('addedAssets'));
 
@@ -433,12 +435,15 @@ class App extends React.Component<any, any> {
       add_wnav_already_asked
     });
 
-    await this.subscribeTokens();
-    await this.getAccountAssets();
-    await this.getBridgeSupply();
-    await this.getFarmingInfo();
-    await this.getStakingInfo();
-    await this.getRewardsInfo();
+    if (validChain)
+    {
+      await this.subscribeTokens();
+      await this.getAccountAssets();
+      await this.getBridgeSupply();
+      await this.getFarmingInfo();
+      await this.getStakingInfo();
+      await this.getRewardsInfo();
+    }
   };
 
   public subscribeTokens = async () => {
@@ -919,17 +924,20 @@ class App extends React.Component<any, any> {
       const chainId = await web3.eth.chainId();
       const validChain = isValidChain(chainId);
       const bridgeData : IBridgeData = getBridgeData(chainId);
-      let is_registered = await callIsRegistered(address, chainId, web3)
+      let is_registered = validChain ? await callIsRegistered(address, chainId, web3) : false
       bridgeData.blockNumber = (await this.electrumClient.blockchain_headers_subscribe()).height;
       let added_assets: any = (await localforage.getItem('addedAssets'));
       let added_asset = added_assets && added_assets[chainId] && added_assets[chainId][address];
       await this.setState({chainId, networkId, validChain, bridgeData, is_registered, added_asset});
-      await this.getAccountAssets();
-      await this.getBridgeSupply();
-      await this.subscribeTokens();
-      await this.getFarmingInfo();
-      await this.getStakingInfo();
-      await this.getRewardsInfo();
+      if (validChain)
+      {
+        await this.getAccountAssets();
+        await this.getBridgeSupply();
+        await this.subscribeTokens();
+        await this.getFarmingInfo();
+        await this.getStakingInfo();
+        await this.getRewardsInfo();
+      }
     });
   };
 
