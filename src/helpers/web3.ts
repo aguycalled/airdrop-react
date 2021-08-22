@@ -238,7 +238,7 @@ export function callAddLiquidity(address: string, amount: number, chainId: numbe
         const token = getDexRouterContract(chainId, web3)
 
         const timestamp = (await web3.eth.getBlock(await web3.eth.getBlockNumber())).timestamp;
-        
+
         await token.methods
             .addLiquidityETH(TOKEN_CONTRACT[chainId].address,
                 amount,
@@ -247,7 +247,7 @@ export function callAddLiquidity(address: string, amount: number, chainId: numbe
                 address,
                 timestamp+10000)
             .send(
-                { from: address }
+                { from: address, value: amount }
             ).on("receipt", (txHash: string) => resolve(txHash))
             .catch((err: any) => reject(err));
     })

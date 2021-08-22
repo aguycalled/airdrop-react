@@ -216,7 +216,7 @@ export interface IDialogAmount {
   title: string;
   button: string;
   result: any;
-  balance: number;
+  balance: string;
   token_balance: number;
   native_balance: number;
   decimals: number;
@@ -307,7 +307,7 @@ const INITIAL_STATE: IAppState = {
     title: '',
     button: '',
     result: undefined,
-    balance: 0,
+    balance: '',
     token_balance: 0,
     native_balance: 0,
     decimals: 0,
@@ -720,7 +720,7 @@ class App extends React.Component<any, any> {
 
       var needApprovalNative = new web3.utils.BN(await callRouterAllowanceNative(address, chainId, web3)).lt(new web3.utils.BN(amount))
 
-      if (needApproval)
+      if (needApprovalNative)
       {
         const requestAllowance = (address: string, chainId: number, web3: any) => {
           return new Promise((resolve, reject) => {
@@ -1175,6 +1175,7 @@ class App extends React.Component<any, any> {
             killSession={this.resetApp}
             sectionSelected={this.menuSelected}
             addedAsset={added_asset}>
+            {web3 ? (
                 <DialogAmount open={dialog_amount.open}
                               text={dialog_amount.text}
                               title={dialog_amount.title}
@@ -1188,7 +1189,8 @@ class App extends React.Component<any, any> {
                               native_balance={dialog_amount.native_balance}
                               bridge_info={farmingData}
                               chainId={chainId}
-                                    />
+                              web3={web3}
+                                    />) : ''}
                   <SContent>
                   {!validChain ? (
                       <Alert severity="error">The selected network is currently not supported.</Alert>
@@ -1219,7 +1221,7 @@ class App extends React.Component<any, any> {
                                            dialog_amount.open = true;
                                            dialog_amount.title = 'Remove tokens from Liquidity Pool';
                                            dialog_amount.text = 'Indicate the amount of tokens you would like to remove from the liquidity pool'
-                                           dialog_amount.balance = farmingData.lpUserBalance;
+                                           dialog_amount.balance = new web3.utils.BN(farmingData.lpUserBalance).toString();
                                            dialog_amount.token_balance = farmingData.reserves[TOKEN_NAME] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
                                            dialog_amount.native_balance = farmingData.reserves[getNativeCurrency(chainId).symbol] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
                                            dialog_amount.button = 'Remove from LP'
@@ -1233,7 +1235,6 @@ class App extends React.Component<any, any> {
                                          onAdd={() => {
                                            let bal_tok = token_balance;
                                            let bal_nat = native_balance-1e15;
-                                           let initial_nat = Number(bal_nat);
 
                                            const getAmountOut = (reserves: any, amount: number, in_: string, out: string) => {
                                              const amountInWithFee = (new web3.utils.BN(amount)).mul(new web3.utils.BN(9975));
@@ -1245,21 +1246,17 @@ class App extends React.Component<any, any> {
 
                                            bal_nat = getAmountOut(farmingData.reserves, bal_tok, TOKEN_NAME, getNativeCurrency(chainId).symbol)
 
-                                           console.log(bal_nat, native_balance)
-
                                            if (new web3.utils.BN(bal_nat).gt(new web3.utils.BN(native_balance)))
                                            {
                                              bal_nat = native_balance;
                                              bal_tok = getAmountOut(farmingData.reserves, native_balance, getNativeCurrency(chainId).symbol, TOKEN_NAME)
-
-                                             console.log(bal_tok.toString(), bal_nat.toString(), native_balance)
 
                                            }
 
                                            dialog_amount.open = true;
                                            dialog_amount.title = 'Add tokens to Liquidity Pool';
                                            dialog_amount.text = 'Indicate the amount of tokens you would like to add to the liquidity pool'
-                                           dialog_amount.balance = bal_tok;
+                                           dialog_amount.balance = bal_nat.toString();
                                            dialog_amount.token_balance = bal_tok;
                                            dialog_amount.native_balance = bal_nat;
                                            dialog_amount.button = 'Add to LP'
@@ -1274,7 +1271,7 @@ class App extends React.Component<any, any> {
                             dialog_amount.open = true;
                             dialog_amount.title = 'Farm LP tokens';
                             dialog_amount.text = 'Indicate the amount of LP tokens you would like to farm.'
-                            dialog_amount.balance = farmingData.lpUserBalance;
+                            dialog_amount.balance = new web3.utils.BN(farmingData.lpUserBalance).toString();
                             dialog_amount.token_balance = farmingData.reserves[TOKEN_NAME] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
                             dialog_amount.native_balance = farmingData.reserves[getNativeCurrency(chainId).symbol] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
                             dialog_amount.button = 'Farm'
@@ -1287,7 +1284,7 @@ class App extends React.Component<any, any> {
                             dialog_amount.open = true;
                             dialog_amount.title = 'Remove LP tokens from farming';
                             dialog_amount.text = 'Indicate the amount of LP tokens you would like to remove from farming'
-                            dialog_amount.balance = farmingData.lpDepositedBalance;
+                            dialog_amount.balance = new web3.utils.BN(farmingData.lpDepositedBalance).toString();
                             dialog_amount.token_balance = farmingData.depositedNavLp;
                             dialog_amount.native_balance = farmingData.depositedBnbLp;
                             dialog_amount.button = 'Remove from farming'

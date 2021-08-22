@@ -21,7 +21,7 @@ export default function Farming(props:any) {
     return (
         <Card>
             <CardHeader
-                title={'Your rewards'}
+                title={'Rewards'}
             />
             <CardContent>
 

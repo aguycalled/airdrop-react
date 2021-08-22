@@ -16,7 +16,7 @@ import {getNativeCurrency} from "./AccountAssets";
 import {TOKEN_NAME} from "../constants";
 
 export default function DialogAmount(props: any) {
-    const {max, chainId, title, text, open, result, button, decimals, error_max_0, bridge_info, balance, token_balance, native_balance} = props;
+    const {max, web3, chainId, title, text, open, result, button, decimals, error_max_0, bridge_info, balance, token_balance, native_balance} = props;
 
     const [value, setValue] = React.useState(
         100
@@ -26,7 +26,7 @@ export default function DialogAmount(props: any) {
         setValue(newValue);
     };
 
-    return (open && balance == 0) ? (
+    return (open && new web3.utils.BN(balance).eq(new web3.utils.BN(0))) ? (
             <Alert severity="error" action={
                 <IconButton
                     aria-label="close"
@@ -55,12 +55,12 @@ export default function DialogAmount(props: any) {
                 <DialogContentText sx={{
                     marginTop: '20px'
                 }}>
-                    Amount: {(token_balance/10**8)*value/100} {TOKEN_NAME} / {(native_balance/10**decimals)*value/100} {getNativeCurrency(chainId).symbol}
+                    Amount: {new web3.utils.BN(token_balance).div(new web3.utils.BN(10**8)).mul(new web3.utils.BN(value)).div(new web3.utils.BN(100)).toString()} {TOKEN_NAME} / {(native_balance/10**18)*value/100} {getNativeCurrency(chainId).symbol}
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => { result() ; }}>Cancel</Button>
-                <Button onClick={() => { result(Math.floor(balance*value/100)) ; }}>{button}</Button>
+                <Button onClick={() => { result((new web3.utils.BN(balance).mul(new web3.utils.BN(value)).div(new web3.utils.BN(100)))); }}>{button}</Button>
             </DialogActions>
         </Dialog>
     );

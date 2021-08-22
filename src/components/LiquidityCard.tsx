@@ -22,7 +22,7 @@ export function LiquidityPoolCard(props:any) {
             />
 
             <CardContent>
-                <Typography variant={"subtitle1"} sx={{paddingTop: '10px', paddingBottom: '10px'}}>
+                <Typography variant={"subtitle1"} sx={{paddingTop: '10px'}}>
                     You are farming:
                 </Typography>
                 <Typography variant="subtitle2" color="textSecondary">
@@ -31,7 +31,7 @@ export function LiquidityPoolCard(props:any) {
                 <Typography variant="subtitle2" color="textSecondary" >
                     {String(farmingData.depositedBnbLp / 1e18).toLocaleString()} BNB
                 </Typography>
-                <Typography variant={"subtitle1"} sx={{paddingTop: '20px', paddingBottom: '10px'}}>
+                <Typography variant={"subtitle1"} sx={{paddingTop: '20px'}}>
                     Your share:
                 </Typography>
                 <Typography variant="subtitle2" color="textSecondary" >

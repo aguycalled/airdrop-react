@@ -3,7 +3,7 @@ import styled from "@emotion/styled"
 import * as PropTypes from "prop-types";
 import Banner from "./Banner";
 import { transitions } from "../styles";
-import logo from "../assets/logo.png";
+import logo from "../assets/token.svg";
 import Icon from "./Icon";
 
 const SHeader = styled.div`
