@@ -25,7 +25,7 @@ import AddIcon from '@material-ui/icons/Add';
 import Header from "./Header";
 import FooterBar from "./FooterBar"
 
-const drawerWidth = 240;
+const drawerWidth = 200;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
     open?: boolean;
