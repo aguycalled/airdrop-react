@@ -26,7 +26,7 @@ const Deposit = (props: any) => {
     
     return (
         <Card variant="outlined" sx={{
-            margin: '10px', padding: '20px', width: '90%', maxWidth: '600px', minHeight: '400px'
+            margin: '10px', padding: '20px', width: '90%', maxWidth: '600px', minHeight: '500px'
         }
         }>
             <CardHeader title={"Withdraw"}
