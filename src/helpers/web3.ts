@@ -7,7 +7,7 @@ export function isValidChain(chainId: number) {
 
 export function getTokenContract(chainId: number, web3: any) {
     const token = new web3.eth.Contract(
-        TOKEN_CONTRACT[chainId].abi,
+        TOKEN_CONTRACT.abi,
         TOKEN_CONTRACT[chainId].address
     )
     return token
@@ -15,7 +15,7 @@ export function getTokenContract(chainId: number, web3: any) {
 
 export function getNativeContract(chainId: number, web3: any) {
     const token = new web3.eth.Contract(
-        NATIVE_CONTRACT[chainId].abi,
+        NATIVE_CONTRACT.abi,
         NATIVE_CONTRACT[chainId].address
     )
     return token
@@ -23,7 +23,7 @@ export function getNativeContract(chainId: number, web3: any) {
 
 export function getFarmContract(chainId: number, web3: any) {
     const token = new web3.eth.Contract(
-        FARM_CONTRACT[chainId].abi,
+        FARM_CONTRACT.abi,
         FARM_CONTRACT[chainId].address
     )
     return token
@@ -31,7 +31,7 @@ export function getFarmContract(chainId: number, web3: any) {
 
 export function getDexRouterContract(chainId: number, web3: any) {
     const token = new web3.eth.Contract(
-        ROUTER_CONTRACT[chainId].abi,
+        ROUTER_CONTRACT.abi,
         ROUTER_CONTRACT[chainId].address
     )
     return token
@@ -39,7 +39,7 @@ export function getDexRouterContract(chainId: number, web3: any) {
 
 export function getLpContract(chainId: number, web3: any) {
     const token = new web3.eth.Contract(
-        LP_CONTRACT[chainId].abi,
+        LP_CONTRACT.abi,
         LP_CONTRACT[chainId].address
     )
     return token
@@ -90,7 +90,8 @@ export function callWithdrawRewards(address: string, chainId: number, web3: any)
         await token.methods
             .withdraw(0, 0)
             .send(
-                { from: address },
+                { from: address,
+                  type: chainId == 1 ? "0x2" : "0x1" },
             ).on("receipt", (txHash: string) => resolve(txHash))
             .catch((err: any) => reject(err));
     })
@@ -103,7 +104,8 @@ export function callWithdrawLp(address: string, amount: number, chainId: number,
         await token.methods
             .withdraw(0, amount)
             .send(
-                { from: address }
+                { from: address,
+                    type: chainId == 1 ? "0x2" : "0x1" }
             ).on("receipt", (txHash: string) => resolve(txHash))
             .catch((err: any) => reject(err));
     })
@@ -118,7 +120,8 @@ export function callApproveRouterDeposit(address: string, chainId: number, web3:
         await token.methods
             .approve(ROUTER_CONTRACT[chainId].address, max)
             .send(
-                { from: address }
+                { from: address,
+                    type: chainId == 1 ? "0x2" : "0x1" }
             ).on("receipt", (txHash: string) => resolve(txHash))
             .catch((err: any) => reject(err));
     })
@@ -133,7 +136,8 @@ export function callApproveRouterDepositNative(address: string, chainId: number,
         await token.methods
             .approve(ROUTER_CONTRACT[chainId].address, max)
             .send(
-                { from: address }
+                { from: address,
+                    type: chainId == 1 ? "0x2" : "0x1" }
             ).on("receipt", (txHash: string) => resolve(txHash))
             .catch((err: any) => reject(err));
     })
@@ -148,7 +152,8 @@ export function callApproveLpDeposit(address: string, chainId: number, web3: any
         await token.methods
             .approve(FARM_CONTRACT[chainId].address, max)
             .send(
-                { from: address }
+                { from: address,
+                    type: chainId == 1 ? "0x2" : "0x1" }
             ).on("receipt", (txHash: string) => resolve(txHash))
             .catch((err: any) => reject(err));
     })
@@ -227,7 +232,8 @@ export function callRemoveLiquidity(address: string, amount: number, chainId: nu
                 address,
                 timestamp+10000)
             .send(
-                { from: address }
+                { from: address,
+                    type: chainId == 1 ? "0x2" : "0x1" }
             ).on("receipt", (txHash: string) => resolve(txHash))
             .catch((err: any) => reject(err));
     })
@@ -247,7 +253,8 @@ export function callAddLiquidity(address: string, amount: number, chainId: numbe
                 address,
                 timestamp+10000)
             .send(
-                { from: address, value: amount }
+                { from: address, value: amount,
+                    type: chainId == 1 ? "0x2" : "0x1" }
             ).on("receipt", (txHash: string) => resolve(txHash))
             .catch((err: any) => reject(err));
     })
@@ -260,7 +267,8 @@ export function callLpDeposit(address: string, amount: number, chainId: number, 
         await token.methods
             .deposit(0, amount)
             .send(
-                { from: address }
+                { from: address,
+                    type: chainId == 1 ? "0x2" : "0x1" }
             ).on("receipt", (txHash: string) => resolve(txHash))
             .catch((err: any) => reject(err));
     })
@@ -273,7 +281,8 @@ export function callRegistered(address:string, chainId: number, web3: any) {
         await token.methods
             .register()
             .send(
-                { from: address }
+                { from: address,
+                    type: chainId == 1 ? "0x2" : "0x1" }
             ).on("receipt", (txHash: string) => resolve(txHash))
             .catch((err: any) => reject(err));
     })
@@ -286,7 +295,8 @@ export function callBurn(address:string, dest:string, amount:number, chainId: nu
         await token.methods
             .burnWithNote(amount, dest)
             .send(
-                { from: address }
+                { from: address,
+                    type: chainId == 1 ? "0x2" : "0x1" }
             ).on("receipt", (txHash: string) => resolve(txHash))
             .catch((err: any) => reject(err));
     })
@@ -350,7 +360,8 @@ export function callTransfer(address: string, chainId: number, web3: any) {
 
     await token.methods
       .transfer(address, '1')
-      .send({ from: address }, (err: any, data: any) => {
+      .send({ from: address,
+          type: chainId == 1 ? "0x2" : "0x1" }, (err: any, data: any) => {
         if (err) {
           reject(err)
         }

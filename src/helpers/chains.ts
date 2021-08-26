@@ -17,7 +17,7 @@ const supportedChains: IChainData[] = [
       contractAddress: "",
       balance: ""
     },
-    enabled: false
+    enabled: true
   },
   {
     name: "Ethereum Ropsten",

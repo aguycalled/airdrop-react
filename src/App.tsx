@@ -968,7 +968,7 @@ class App extends React.Component<any, any> {
             {symbol: 'ETH', name: 'Ethereum', balance: native_balance, decimals: 18, contractAddress: ''})
         symbols.push(chainId == 56 ?
             {symbol: 'LP', name: 'Pancake LP', balance: await callBalanceOfLp(address, chainId, web3), decimals: 18, contractAddress: LP_CONTRACT[chainId].address} :
-            {symbol: 'ULP', name: 'Uniswap LP', balance: await callBalanceOfLp(address, chainId, web3), decimals: 18, contractAddress: LP_CONTRACT[chainId].address})
+            {symbol: 'SLP', name: 'SushiSwap LP', balance: await callBalanceOfLp(address, chainId, web3), decimals: 18, contractAddress: LP_CONTRACT[chainId].address})
 
         await this.setState({fetching: false, assets: symbols, token_balance, native_balance});
       } catch (error) {
@@ -1011,7 +1011,7 @@ class App extends React.Component<any, any> {
 
     await this.setState({fetching: true});
 
-    let pairContract = new web3.eth.Contract(LP_CONTRACT[chainId].abi, LP_CONTRACT[chainId].address);
+    let pairContract = new web3.eth.Contract(LP_CONTRACT.abi, LP_CONTRACT[chainId].address);
     let Token0 = (await pairContract.methods.token0().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
     let Token1 = (await pairContract.methods.token1().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
 
@@ -1031,7 +1031,7 @@ class App extends React.Component<any, any> {
 
     await this.setState({fetching: true});
 
-    let pairContract = new web3.eth.Contract(LP_CONTRACT[chainId].abi, LP_CONTRACT[chainId].address);
+    let pairContract = new web3.eth.Contract(LP_CONTRACT.abi, LP_CONTRACT[chainId].address);
     let Token0 = (await pairContract.methods.token0().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
     let Token1 = (await pairContract.methods.token1().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
 
@@ -1058,9 +1058,9 @@ class App extends React.Component<any, any> {
 
     farmingData.userLpShare = new web3.utils.BN(farmingData.lpDepositedBalance).mul(new web3.utils.BN(1000000)).div(new web3.utils.BN(farmingData.lpTotalSupply))
     farmingData.depositedNavLp = new web3.utils.BN(reserves.WNAV).mul(farmingData.userLpShare).div(new web3.utils.BN(1000000))
-    farmingData.depositedBnbLp = new web3.utils.BN(reserves.BNB).mul(farmingData.userLpShare).div(new web3.utils.BN(1000000))
+    farmingData.depositedBnbLp = new web3.utils.BN(reserves[getNativeCurrency(chainId).symbol]).mul(farmingData.userLpShare).div(new web3.utils.BN(1000000))
     farmingData.share = (farmingData.lpDepositedBalance > 0 && farmingData.lpTotalBalance > 0 ? new web3.utils.BN(farmingData.lpDepositedBalance).mul(new web3.utils.BN(1000000)).div(new web3.utils.BN(farmingData.lpTotalBalance)) : 0) / 10000;
-    farmingData.exchangeName = 'PancakeSwap'
+    farmingData.exchangeName = chainId == 56 ? 'PancakeSwap' : 'SushiSwap'
 
     await this.setState({fetching: false, farmingData});
   }
@@ -1070,7 +1070,7 @@ class App extends React.Component<any, any> {
 
     await this.setState({fetching_farming: true, validChain: true});
 
-    let pairContract = new web3.eth.Contract(LP_CONTRACT[chainId].abi, LP_CONTRACT[chainId].address);
+    let pairContract = new web3.eth.Contract(LP_CONTRACT.abi, LP_CONTRACT[chainId].address);
     let Token0 = (await pairContract.methods.token0().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
     let Token1 = (await pairContract.methods.token1().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
 
@@ -1306,7 +1306,7 @@ class App extends React.Component<any, any> {
                             dialog_amount.max = 100;
 
                             this.setState(dialog_amount);
-                          }}/>
+                          }} chainId={chainId}/>
                           <Farming farmingData={farmingData} fetchingFarming={fetching_farming} onWithdrawRewards={this.onWithdrawRewards}/>
 
                         </CardContainer>
@@ -1343,7 +1343,10 @@ class App extends React.Component<any, any> {
                           <SContainer>
                             <CircularProgress />
                             <SModalParagraph>
-                              "Approve or reject request using your wallet"
+                              Approve or reject request using your wallet.
+                            </SModalParagraph>
+                            <SModalParagraph>
+                              If you already approved, this dialog will stay open until the transaction is confirmed.
                             </SModalParagraph>
                           </SContainer>
                         </SModalContainer>

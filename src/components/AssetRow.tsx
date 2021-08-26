@@ -7,7 +7,7 @@ import token from "../assets/token.svg";
 import bnb from "../assets/bnb.png";
 import eth from "../assets/eth.svg"
 import pancakelp from "../assets/pancake.png"
-import uniswaplp from "../assets/uniswap.png"
+import sushiswaplp from "../assets/sushi.svg"
 
 import {
   handleSignificantDecimals,
@@ -37,7 +37,7 @@ const SAssetBalance = styled.div`
 
 const AssetRow = (props: any) => {
   const { asset } = props;
-  let icons: { [key: string]: any } = {'BNB': bnb, 'ETH': eth, 'LP': pancakelp, 'ULP': uniswaplp};
+  let icons: { [key: string]: any } = {'BNB': bnb, 'ETH': eth, 'LP': pancakelp, 'SLP': sushiswaplp};
   icons[TOKEN_NAME] = token;
 
   const nativeCurrencyIcon = icons[asset.symbol.toUpperCase()] ? icons[asset.symbol.toUpperCase()] : undefined;

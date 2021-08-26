@@ -10,9 +10,10 @@ import Divider from '@material-ui/core/Divider';
 import {CardActions} from "@material-ui/core";
 import {themeOptions} from "../App";
 import ActionButton from "./ActionButton";
+import {getNativeCurrency} from "./AccountAssets";
 
 export function LiquidityPoolCard(props:any) {
-    let {farmingData, onAdd, onRemove} = props;
+    let {farmingData, onAdd, onRemove, chainId} = props;
 
     return (
         <Card>
@@ -29,7 +30,7 @@ export function LiquidityPoolCard(props:any) {
                     {String(farmingData.depositedNavLp / 1e8).toLocaleString()} wNAV
                 </Typography>
                 <Typography variant="subtitle2" color="textSecondary" >
-                    {String(farmingData.depositedBnbLp / 1e18).toLocaleString()} BNB
+                    {String(farmingData.depositedBnbLp / 1e18).toLocaleString()} {getNativeCurrency(chainId).symbol}
                 </Typography>
                 <Typography variant={"subtitle1"} sx={{paddingTop: '20px'}}>
                     Your share:
