@@ -16,7 +16,7 @@ import {getNativeCurrency} from "./AccountAssets";
 import {TOKEN_NAME} from "../constants";
 
 export default function DialogAmount(props: any) {
-    const {max, web3, chainId, title, text, open, result, button, decimals, error_max_0, bridge_info, balance, token_balance, native_balance} = props;
+    const {max, web3, chainId, title, text, open, result, button, decimals, error_max_0, bridge_info, balance, token_balance, native_balance, type} = props;
 
     const [value, setValue] = React.useState(
         100
@@ -60,7 +60,18 @@ export default function DialogAmount(props: any) {
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => { result() ; }}>Cancel</Button>
-                <Button onClick={() => { result((new web3.utils.BN(balance).mul(new web3.utils.BN(value)).div(new web3.utils.BN(100)))); }}>{button}</Button>
+                <Button onClick={() => {
+                    if (type == "add_liq")
+                    {
+                        result((new web3.utils.BN(token_balance).mul(new web3.utils.BN(value)).div(new web3.utils.BN(100))),
+                            (new web3.utils.BN(native_balance).mul(new web3.utils.BN(value)).div(new web3.utils.BN(100))));
+
+                    }
+                    else
+                    {
+                        result((new web3.utils.BN(balance).mul(new web3.utils.BN(value)).div(new web3.utils.BN(100))));
+                    }
+                }}>{button}</Button>
             </DialogActions>
         </Dialog>
     );

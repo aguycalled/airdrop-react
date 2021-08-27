@@ -143,14 +143,14 @@ export function callApproveRouterDepositNative(address: string, chainId: number,
     })
 }
 
-export function callApproveLpDeposit(address: string, chainId: number, web3: any) {
+export function callApproveLpDeposit(address: string, chainId: number, web3: any, address2: string = FARM_CONTRACT[chainId].address) {
     return new Promise(async(resolve, reject) => {
         const token = getLpContract(chainId, web3)
 
         const max = new web3.utils.BN("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 
         await token.methods
-            .approve(FARM_CONTRACT[chainId].address, max)
+            .approve(address2, max)
             .send(
                 { from: address,
                     type: chainId == 1 ? "0x2" : "0x1" }
@@ -159,12 +159,12 @@ export function callApproveLpDeposit(address: string, chainId: number, web3: any
     })
 }
 
-export function callLpAllowance(address: string, chainId: number, web3: any) {
+export function callLpAllowance(address: string, chainId: number, web3: any, address2: string = FARM_CONTRACT[chainId].address) {
     return new Promise(async(resolve, reject) => {
         const token = getLpContract(chainId, web3)
 
         await token.methods
-            .allowance(address, FARM_CONTRACT[chainId].address)
+            .allowance(address, address2)
             .call(
                 { from: address },
                 (err: any, data: any) => {
@@ -224,8 +224,7 @@ export function callRemoveLiquidity(address: string, amount: number, chainId: nu
         const timestamp = (await web3.eth.getBlock(await web3.eth.getBlockNumber())).timestamp;
 
         await token.methods
-            .removeLiquidity(TOKEN_CONTRACT[chainId].address,
-                NATIVE_CONTRACT[chainId].address,
+            .removeLiquidityETH(TOKEN_CONTRACT[chainId].address,
                 amount,
                 0,
                 0,
@@ -239,7 +238,7 @@ export function callRemoveLiquidity(address: string, amount: number, chainId: nu
     })
 }
 
-export function callAddLiquidity(address: string, amount: number, chainId: number, web3: any) {
+export function callAddLiquidity(address: string, tokamount: any, amount: any, chainId: number, web3: any) {
     return new Promise(async(resolve, reject) => {
         const token = getDexRouterContract(chainId, web3)
 
@@ -247,9 +246,9 @@ export function callAddLiquidity(address: string, amount: number, chainId: numbe
 
         await token.methods
             .addLiquidityETH(TOKEN_CONTRACT[chainId].address,
-                amount,
-                0,
-                0,
+                tokamount,
+                tokamount.mul(new web3.utils.BN(90)).div(new web3.utils.BN(100)),
+                amount.mul(new web3.utils.BN(90)).div(new web3.utils.BN(100)),
                 address,
                 timestamp+10000)
             .send(

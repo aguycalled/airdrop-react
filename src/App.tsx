@@ -43,7 +43,7 @@ import {
   BRIDGE_CONFIG,
   TOKEN_CONTRACT,
   GAS_SIZE,
-  LP_CONTRACT, FARM_CONTRACT
+  LP_CONTRACT, FARM_CONTRACT, ROUTER_CONTRACT
 } from "./constants";
 
 import styled from '@emotion/styled';
@@ -226,6 +226,7 @@ export interface IDialogAmount {
   decimals: number;
   error_max_0: string;
   max: number;
+  type: string;
 }
 
 interface IAppState {
@@ -256,8 +257,9 @@ interface IAppState {
   added_asset: boolean;
   add_wnav_already_asked: boolean;
   dialog_amount: IDialogAmount;
-  token_balance: number;
+  token_balance: any;
   native_balance: number;
+  lp_balance: any;
 }
 
 const INITIAL_STATE: IAppState = {
@@ -316,10 +318,12 @@ const INITIAL_STATE: IAppState = {
     native_balance: 0,
     decimals: 0,
     error_max_0: '',
-    max: 0
+    max: 0,
+    type: ''
   },
   token_balance: 0,
-  native_balance: 0
+  native_balance: 0,
+  lp_balance: 0
 };
 
 function initWeb3(provider: any) {
@@ -633,7 +637,7 @@ class App extends React.Component<any, any> {
   }
 
   public onFarmLpTokens = async (amount: number) => {
-    const { web3, address, chainId, dialog_amount, farmingData} = this.state;
+    const { web3, address, chainId, dialog_amount, farmingData, lp_balance} = this.state;
 
     dialog_amount.open = false;
 
@@ -652,7 +656,7 @@ class App extends React.Component<any, any> {
 
       let self = this;
 
-      var needApproval = new web3.utils.BN(await callLpAllowance(address, chainId, web3)).lt(new web3.utils.BN(farmingData.lpUserBalance))
+      var needApproval = new web3.utils.BN(await callLpAllowance(address, chainId, web3)).lt(new web3.utils.BN(lp_balance))
 
       if (needApproval)
       {
@@ -694,14 +698,14 @@ class App extends React.Component<any, any> {
     }
   }
 
-  public onAddLiquidity = async (amount: number) => {
-    const { web3, address, chainId, dialog_amount } = this.state;
+  public onAddLiquidity = async (tok_amount: any, nat_amount: any) => {
+    const { web3, address, chainId, dialog_amount, native_balance, token_balance } = this.state;
 
     dialog_amount.open = false;
 
     this.setState({dialog_amount});
 
-    if (!web3 || !amount) {
+    if (!web3 || !tok_amount || !nat_amount) {
       return;
     }
 
@@ -714,7 +718,7 @@ class App extends React.Component<any, any> {
 
       let self = this;
 
-      var needApproval = new web3.utils.BN(await callRouterAllowance(address, chainId, web3)).lt(new web3.utils.BN(amount))
+      var needApproval = new web3.utils.BN(await callRouterAllowance(address, chainId, web3)).lt(new web3.utils.BN(token_balance))
 
       if (needApproval)
       {
@@ -729,7 +733,7 @@ class App extends React.Component<any, any> {
         await requestAllowance(address, chainId, web3);
       }
 
-      var needApprovalNative = new web3.utils.BN(await callRouterAllowanceNative(address, chainId, web3)).lt(new web3.utils.BN(amount))
+      var needApprovalNative = new web3.utils.BN(await callRouterAllowanceNative(address, chainId, web3)).lt(new web3.utils.BN(native_balance))
 
       if (needApprovalNative)
       {
@@ -745,15 +749,15 @@ class App extends React.Component<any, any> {
       }
 
 
-      const addLiquidity = (address: string, amount: number, chainId: number, web3: any) => {
+      const addLiquidity = (address: string, amount: any, amount_2:any, chainId: number, web3: any) => {
         return new Promise((resolve, reject) => {
-          callAddLiquidity(address, amount, chainId, web3).then((response) => {
+          callAddLiquidity(address, amount, amount_2, chainId, web3).then((response) => {
             resolve({"Result":"Added"})
           }).catch((err: any) => reject(err));
         })
       }
 
-      const result = await addLiquidity(address, amount, chainId, web3);
+      const result = await addLiquidity(address, tok_amount, nat_amount, chainId, web3);
 
       await this.getAccountAssets();
       await this.getFarmingInfo();
@@ -858,7 +862,7 @@ class App extends React.Component<any, any> {
   }
 
   public onRemoveLiquidity = async (amount: number) => {
-    const { web3, address, chainId, dialog_amount } = this.state;
+    const { web3, address, chainId, dialog_amount, lp_balance } = this.state;
 
     dialog_amount.open = false;
 
@@ -876,6 +880,21 @@ class App extends React.Component<any, any> {
       this.toggleModal();
 
       let self = this;
+
+      var needApproval = new web3.utils.BN(await callLpAllowance(address, chainId, web3, ROUTER_CONTRACT[chainId].address)).lt(new web3.utils.BN(lp_balance))
+
+      if (needApproval)
+      {
+        const requestAllowance = (address: string, chainId: number, web3: any) => {
+          return new Promise((resolve, reject) => {
+            callApproveLpDeposit(address, chainId, web3, ROUTER_CONTRACT[chainId].address).then((response) => {
+              resolve(true)
+            }).catch((err: any) => reject(err));
+          })
+        }
+
+        await requestAllowance(address, chainId, web3);
+      }
 
       const removeLiquidity = (address: string, amount: number, chainId: number, web3: any) => {
         return new Promise((resolve, reject) => {
@@ -967,15 +986,16 @@ class App extends React.Component<any, any> {
         // get account balances
         let token_balance = await callBalanceOfToken(address, chainId, web3);
         let native_balance = await callBalanceOf(address, web3);
+        let lp_balance = await callBalanceOfLp(address, chainId, web3)
         let symbols = [{symbol: TOKEN_NAME, name: TOKEN_FULL_NAME, balance: token_balance, decimals: 8, contractAddress: TOKEN_CONTRACT[chainId].address}]
         symbols.push(chainId == 56 ?
             {symbol: 'BNB', name: 'Binance Coin', balance: native_balance, decimals: 18, contractAddress: ''} :
             {symbol: 'ETH', name: 'Ethereum', balance: native_balance, decimals: 18, contractAddress: ''})
         symbols.push(chainId == 56 ?
-            {symbol: 'LP', name: 'Pancake LP', balance: await callBalanceOfLp(address, chainId, web3), decimals: 18, contractAddress: LP_CONTRACT[chainId].address} :
-            {symbol: 'SLP', name: 'SushiSwap LP', balance: await callBalanceOfLp(address, chainId, web3), decimals: 18, contractAddress: LP_CONTRACT[chainId].address})
+            {symbol: 'LP', name: 'Pancake LP', balance: lp_balance, decimals: 18, contractAddress: LP_CONTRACT[chainId].address} :
+            {symbol: 'SLP', name: 'SushiSwap LP', balance: lp_balance, decimals: 18, contractAddress: LP_CONTRACT[chainId].address})
 
-        await this.setState({fetching: false, assets: symbols, token_balance, native_balance});
+        await this.setState({fetching: false, assets: symbols, token_balance, native_balance, lp_balance});
       } catch (error) {
         console.error(error); // tslint:disable-line
         await this.setState({fetching: false});
@@ -1204,6 +1224,7 @@ class App extends React.Component<any, any> {
                               max={dialog_amount.max}
                               token_balance={dialog_amount.token_balance}
                               native_balance={dialog_amount.native_balance}
+                              type={dialog_amount.type}
                               bridge_info={farmingData}
                               chainId={chainId}
                               web3={web3}
@@ -1245,6 +1266,7 @@ class App extends React.Component<any, any> {
                                            dialog_amount.decimals = 18;
                                            dialog_amount.result = this.onRemoveLiquidity
                                            dialog_amount.error_max_0 = 'You have no tokens on the LP!';
+                                           dialog_amount.type = 'remove_liq'
 
                                            this.setState(dialog_amount);
                                          }}
@@ -1281,6 +1303,7 @@ class App extends React.Component<any, any> {
                                            dialog_amount.result = this.onAddLiquidity
                                            dialog_amount.error_max_0 = 'You have no balance to add!';
                                            dialog_amount.max = 99;
+                                           dialog_amount.type = 'add_liq'
 
                                            this.setState(dialog_amount);
                                          }}/>
@@ -1296,6 +1319,7 @@ class App extends React.Component<any, any> {
                             dialog_amount.result = this.onFarmLpTokens
                             dialog_amount.error_max_0 = 'You don\'t have any LP token! You need to first add liquidity.';
                             dialog_amount.max = 100;
+                            dialog_amount.type = 'farm_lp'
                             this.setState(dialog_amount);
                           }} onRemove={() => {
                             dialog_amount.open = true;
@@ -1309,6 +1333,7 @@ class App extends React.Component<any, any> {
                             dialog_amount.result = this.onWithdrawLpTokens
                             dialog_amount.error_max_0 = 'You are not farming at the moment!';
                             dialog_amount.max = 100;
+                            dialog_amount.type = 'unfarm_lp'
 
                             this.setState(dialog_amount);
                           }} chainId={chainId}/>
