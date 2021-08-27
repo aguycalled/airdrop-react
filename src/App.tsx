@@ -13,7 +13,10 @@ import Drawer from "./components/Drawer";
 import Button from "@material-ui/core/Button"
 import Modal from './components/Modal';
 import ModalResult from "./components/ModalResult";
+import {Link, CardMedia, Typography} from "@material-ui/core";
 import Snackbar from "@material-ui/core/Snackbar"
+
+import metamask from "./assets/metamask.svg"
 
 import {AddBox} from "@material-ui/icons";
 
@@ -392,6 +395,8 @@ class App extends React.Component<any, any> {
   }
 
   public onConnect = async () => {
+    if (!(window.web3 || window.BinanceChain)) return;
+
     const provider = await this.web3Modal.connect();
 
     await this.electrumClient.connect();
@@ -1328,10 +1333,27 @@ class App extends React.Component<any, any> {
                       <>
                       <Grid container spacing={themeOptions.spacing(3)}>
                         <Grid item xs={12}>
-                            <span>{"Connect to your wallet to start using the bridge."}</span>
+                            <span>{(window.web3 || window.BinanceChain) ? "Connect to your wallet to start using the bridge." : "Install Metamask to start using the bridge."}</span>
                         </Grid>
                         <Grid item xs={12}>
-                            <Button onClick={this.onConnect} variant="contained">Connect</Button>
+                          {(window.web3 || window.BinanceChain) ? (
+                              <Button onClick={this.onConnect} variant="contained">Connect</Button>
+                          ) : (
+                              <Box sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                alignContent: 'center',
+                                justifyContent: 'center',
+                                justifyItems: 'center'
+                              }}>
+                                <Link href={"https://metamask.io"}>
+
+                                  <Button>Install Metamask</Button>
+                                </Link>
+                              </Box>
+                          )
+                          }
                         </Grid>
                       </Grid>
                       </>
