@@ -8,21 +8,17 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 
 import {withRouter} from "react-router-dom";
 
-import AccountAssets, {getNativeCurrency} from "./components/AccountAssets";
-import SupplyAudit from "./components/SupplyAudit";
+import {getNativeCurrency} from "./components/AccountAssets";
+import * as PouchDB from 'pouchdb';
 import Alert from '@material-ui/core/Alert';
 import Drawer from "./components/Drawer";
 import Button from "@material-ui/core/Button"
 import Modal from './components/Modal';
 import ModalResult from "./components/ModalResult";
-import {Link, CardMedia, Typography} from "@material-ui/core";
+import {Link} from "@material-ui/core";
 
 
-import Deposit from "./components/Deposit";
-import Withdraw from "./components/Withdraw";
-import Farming from "./components/Farming"
-
-import { IAssetData, IBoxProfile } from "./helpers/types";
+import { IAssetData } from "./helpers/types";
 import {getChainData, getBaseCurrency, hashPersonalMessage, recoverPublicKey} from "./helpers/utilities";
 
 import {
@@ -49,9 +45,6 @@ import styled from '@emotion/styled';
 import { ThemeProvider, createTheme, responsiveFontSizes } from '@material-ui/core/styles';
 
 import Grid from '@material-ui/core/Grid';
-import {LiquidityPoolCard} from "./components/LiquidityCard";
-import CardContainer from "./components/CardContainer";
-import ConfirmationDialog from "./components/ConfirmationDialog";
 import DialogAmount from "./components/DialogAmount";
 import {BscConnector} from "@binance-chain/bsc-connector";
 import Sign from "./components/Sign";
@@ -423,15 +416,14 @@ class App extends React.Component<any, any> {
 
     const validChain = isValidChain(chainId)
 
-    const bridgeData : IBridgeData = getBridgeData(chainId);
-    bridgeData.blockNumber = (await this.electrumClient.blockchain_headers_subscribe()).height;
+    //const bridgeData : IBridgeData = getBridgeData(chainId);
+    //bridgeData.blockNumber = (await this.electrumClient.blockchain_headers_subscribe()).height;
 
     let is_registered = validChain ? await callIsRegistered(address, chainId, web3) : false
 
     let added_assets: any = (await localforage.getItem('addedAssets'));
 
     let add_wnav_already_asked: any = (await localforage.getItem('alreadyAskedToAdd'));
-
 
     let added_asset = added_assets && added_assets[chainId] && added_assets[chainId][address];
 
@@ -443,7 +435,6 @@ class App extends React.Component<any, any> {
       chainId,
       networkId,
       validChain,
-      bridgeData,
       is_registered,
       added_asset,
       add_wnav_already_asked
@@ -452,11 +443,11 @@ class App extends React.Component<any, any> {
     if (validChain)
     {
       await this.subscribeTokens();
-      await this.getAccountAssets();
+      /*await this.getAccountAssets();
       await this.getBridgeSupply();
       await this.getFarmingInfo();
       await this.getStakingInfo();
-      await this.getRewardsInfo();
+      await this.getRewardsInfo();*/
     }
   };
 
@@ -687,8 +678,8 @@ class App extends React.Component<any, any> {
       const result = await farmTokens(address, amount, chainId, web3);
 
       await this.getAccountAssets();
-      await this.getFarmingInfo();
-      await this.getRewardsInfo();
+      /*await this.getFarmingInfo();
+      await this.getRewardsInfo();*/
 
       this.setState({
         web3,
@@ -764,8 +755,8 @@ class App extends React.Component<any, any> {
       const result = await addLiquidity(address, tok_amount, nat_amount, chainId, web3);
 
       await this.getAccountAssets();
-      await this.getFarmingInfo();
-      await this.getRewardsInfo();
+      /*await this.getFarmingInfo();
+      await this.getRewardsInfo();*/
 
       this.setState({
         web3,
@@ -806,7 +797,7 @@ class App extends React.Component<any, any> {
       const result = await withdrawRewards(address, chainId, web3);
 
       await this.getAccountAssets();
-      await this.getRewardsInfo();
+      /*await this.getRewardsInfo();*/
 
       this.setState({
         web3,
@@ -850,8 +841,8 @@ class App extends React.Component<any, any> {
 
       const result = await withdrawLp(address, amount, chainId, web3);
 
-      await this.getFarmingInfo();
-      await this.getRewardsInfo();
+      /*await this.getFarmingInfo();
+      await this.getRewardsInfo();*/
 
       this.setState({
         web3,
@@ -910,8 +901,8 @@ class App extends React.Component<any, any> {
 
       const result = await removeLiquidity(address, amount, chainId, web3);
 
-      await this.getFarmingInfo();
-      await this.getRewardsInfo();
+      /*await this.getFarmingInfo();
+      await this.getRewardsInfo();*/
       await this.getAccountAssets()
 
       this.setState({
@@ -985,35 +976,35 @@ class App extends React.Component<any, any> {
     provider.on("close", () => this.resetApp());
     provider.on("accountsChanged", async (accounts: string[]) => {
       const {web3, chainId} = this.state;
-      let is_registered = await callIsRegistered(accounts[0], chainId, web3)
+      /*let is_registered = await callIsRegistered(accounts[0], chainId, web3)*/
       let added_assets: any = (await localforage.getItem('addedAssets'));
       let added_asset = added_assets && added_assets[chainId] && added_assets[chainId][accounts[0]];
-      await this.setState({address: accounts[0], is_registered, added_asset});
-      await this.getAccountAssets();
+      await this.setState({address: accounts[0]});
+      /*await this.getAccountAssets();
       await this.getBridgeSupply();
       await this.subscribeTokens();
       await this.getFarmingInfo();
-      await this.getRewardsInfo();
+      await this.getRewardsInfo();*/
     });
 
     provider.on("networkChanged", async (networkId: number) => {
       const {web3, address} = this.state;
       const chainId = await web3.eth.chainId();
       const validChain = isValidChain(chainId);
-      const bridgeData : IBridgeData = getBridgeData(chainId);
-      let is_registered = validChain ? await callIsRegistered(address, chainId, web3) : false
-      bridgeData.blockNumber = (await this.electrumClient.blockchain_headers_subscribe()).height;
+      //const bridgeData : IBridgeData = getBridgeData(chainId);
+      //let is_registered = validChain ? await callIsRegistered(address, chainId, web3) : false
+      //bridgeData.blockNumber = (await this.electrumClient.blockchain_headers_subscribe()).height;
       let added_assets: any = (await localforage.getItem('addedAssets'));
       let added_asset = added_assets && added_assets[chainId] && added_assets[chainId][address];
-      await this.setState({chainId, networkId, validChain, bridgeData, is_registered, added_asset});
+      await this.setState({chainId, networkId, validChain });
       if (validChain)
       {
-        await this.getAccountAssets();
+        /*await this.getAccountAssets();
         await this.getBridgeSupply();
         await this.subscribeTokens();
         await this.getFarmingInfo();
         await this.getStakingInfo();
-        await this.getRewardsInfo();
+        await this.getRewardsInfo();*/
       }
     });
   };
@@ -1048,151 +1039,6 @@ class App extends React.Component<any, any> {
             {symbol: 'SLP', name: 'SushiSwap LP', balance: lp_balance, decimals: 18, contractAddress: LP_CONTRACT[chainId].address})
 
         await this.setState({fetching: false, assets: symbols, token_balance, native_balance, lp_balance});
-      } catch (error) {
-        console.error(error); // tslint:disable-line
-        await this.setState({fetching: false});
-      }
-    }
-    else
-    {
-      await this.setState({validChain: false})
-    }
-  };
-
-  public getStakingInfo = async () => {
-    const {address, chainId, web3, validChain, stakingData, bridgeData} = this.state;
-
-    await this.setState({fetching_farming: true, validChain: true});
-
-    let history = await this.electrumClient.blockchain_scripthash_getHistory(bridgeData.stakingScriptHash, bridgeData.blockNumber-500)
-
-    let stakesCount = 0;
-
-    for (var i in history) {
-      var entry = history[i]
-
-      if (bridgeData.blockNumber - entry.height < 480) {
-        var tx = await this.electrumClient.blockchain_transaction_getMerkle(entry.tx_hash);
-        if (tx.pos == 1) stakesCount++;
-      }
-    }
-
-    stakingData.stakesCount = stakesCount
-    stakingData.stakingBalance = (await this.electrumClient.blockchain_scripthash_getBalance(bridgeData.stakingScriptHash)).confirmed;
-
-    await this.setState({fetching_farming: false, stakingData});
-  }
-
-  public getReserves = async () => {
-    const {chainId, web3, farmingData} = this.state;
-
-    await this.setState({fetching: true});
-
-    let pairContract = new web3.eth.Contract(LP_CONTRACT.abi, LP_CONTRACT[chainId].address);
-    let Token0 = (await pairContract.methods.token0().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
-    let Token1 = (await pairContract.methods.token1().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
-
-    const rBk = await pairContract.methods.getReserves().call();
-    let reserves : any = {}
-
-    reserves[Token0] = rBk[0];
-    reserves[Token1] = rBk[1];
-
-    farmingData.reserves = reserves;
-
-    await this.setState({fetching: false, farmingData});
-  }
-
-  public getFarmingInfo = async () => {
-    const {address, chainId, web3, farmingData} = this.state;
-
-    await this.setState({fetching: true});
-
-    let pairContract = new web3.eth.Contract(LP_CONTRACT.abi, LP_CONTRACT[chainId].address);
-    let Token0 = (await pairContract.methods.token0().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
-    let Token1 = (await pairContract.methods.token1().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
-
-    const rBk = await pairContract.methods.getReserves().call();
-    let reserves : any = {}
-
-    reserves[Token0] = rBk[0];
-    reserves[Token1] = rBk[1];
-
-    farmingData.reserves = reserves;
-
-    let tokenContract = getTokenContract(chainId, web3);
-    let lpContract = getLpContract(chainId, web3);
-    let lpAddress = LP_CONTRACT[chainId].address;
-    let farmContract = getFarmContract(chainId, web3);
-    let farmAddress = FARM_CONTRACT[chainId].address;
-
-    farmingData.navInLp = parseFloat(await tokenContract.methods.balanceOf(lpAddress).call()) / 1e8
-    farmingData.lpUserBalance = await lpContract.methods.balanceOf(address).call()
-
-    farmingData.lpDepositedBalance = await farmContract.methods.deposited(0, address).call()
-    farmingData.lpTotalBalance = await lpContract.methods.balanceOf(farmAddress).call()
-    farmingData.lpTotalSupply = await lpContract.methods.totalSupply().call();
-
-    farmingData.userLpShare = new web3.utils.BN(farmingData.lpDepositedBalance).mul(new web3.utils.BN(1000000)).div(new web3.utils.BN(farmingData.lpTotalSupply))
-    farmingData.depositedNavLp = new web3.utils.BN(reserves.WNAV).mul(farmingData.userLpShare).div(new web3.utils.BN(1000000))
-    farmingData.depositedBnbLp = new web3.utils.BN(reserves[getNativeCurrency(chainId).symbol]).mul(farmingData.userLpShare).div(new web3.utils.BN(1000000))
-    farmingData.share = (farmingData.lpDepositedBalance > 0 && farmingData.lpTotalBalance > 0 ? new web3.utils.BN(farmingData.lpDepositedBalance).mul(new web3.utils.BN(1000000)).div(new web3.utils.BN(farmingData.lpTotalBalance)) : 0) / 10000;
-    farmingData.exchangeName = chainId == 56 ? 'PancakeSwap' : 'SushiSwap'
-
-    await this.setState({fetching: false, farmingData});
-  }
-
-  public getRewardsInfo = async () => {
-    const {address, chainId, web3, stakingData, farmingData} = this.state;
-
-    await this.setState({fetching_farming: true, validChain: true});
-
-    let pairContract = new web3.eth.Contract(LP_CONTRACT.abi, LP_CONTRACT[chainId].address);
-    let Token0 = (await pairContract.methods.token0().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
-    let Token1 = (await pairContract.methods.token1().call()).toLowerCase() == TOKEN_CONTRACT[chainId].address.toLowerCase() ? TOKEN_NAME : getNativeCurrency(chainId).symbol;
-
-    const rBk = await pairContract.methods.getReserves().call();
-    let reserves : any = {}
-
-    reserves[Token0] = rBk[0];
-    reserves[Token1] = rBk[1];
-
-    let lpContract = getLpContract(chainId, web3);
-    let farmContract = getFarmContract(chainId, web3);
-    let farmAddress = FARM_CONTRACT[chainId].address;
-
-
-    farmingData.pendingTotalRewards = farmingData.lpDepositedBalance > 0 && farmingData.lpTotalBalance > 0 ? new web3.utils.BN(await farmContract.methods.totalPending().call()).mul(new web3.utils.BN(farmingData.lpDepositedBalance)).div(new web3.utils.BN(farmingData.lpTotalBalance)) : 0
-    farmingData.userRewards = await farmContract.methods.pending(0, address).call()
-    farmingData.needApproval = new web3.utils.BN(await lpContract.methods.allowance(address, farmAddress).call()).lt(new web3.utils.BN(farmingData.lpUserBalance))
-    farmingData.expectedNavPerYear = stakingData.stakesCount * 1.8 * 6 * 365;
-    farmingData.pendingDistribute = stakingData.stakingBalance * farmingData.share / 100;
-    farmingData.apy = farmingData.expectedNavPerYear > 0 ? Math.floor(farmingData.expectedNavPerYear * 1000000 / (farmingData.navInLp)) / 10000 : 0
-
-    await this.setState({fetching_farming: false, farmingData});
-  }
-
-  public getBridgeSupply = async () => {
-    const {address, chainId, web3, validChain, bridgeData} = this.state;
-    if (validChain) {
-      await this.setState({fetching: true, validChain: true});
-      try {
-        // get account balances
-        let supply_bridge = await callTotalSupplyOfToken(address, chainId, web3)
-        let supply_cold = (await this.electrumClient.blockchain_scripthash_getBalance(bridgeData.coldScriptHash)).confirmed;
-
-        let navAddress = Bitcore.HDPublicKey(BRIDGE_CONFIG.publicKeyNav).deriveChild(address + chainId + (String(chainId).length % 2 ? '0' : '') + TOKEN_CONTRACT[chainId].address.substr(2)).publicKey.toAddress('mainnet')
-        let deposit_address = navAddress.toString()
-        let deposit_scripthash =  Buffer.from(Bitcore.crypto.Hash.sha256(Bitcore.Script.buildPublicKeyHashOut(navAddress).toBuffer()).reverse()).toString("hex")
-
-        let ticker = await this.binance.prices();
-        let nav_price = ticker.NAVBTC / ticker[getBaseCurrency(chainId) + "BTC"];
-
-        let gasPrice = await web3.eth.getGasPrice() / 1000000000;
-        var mintCost = (GAS_SIZE*gasPrice)/100000000;
-        let gas_cost = BRIDGE_CONFIG.feeMint * (nav_price / mintCost);
-
-        await this.setState({fetching: false, supply_bridge: supply_bridge, supply_cold: supply_cold, deposit_address, deposit_scripthash, nav_price, gas_cost: gas_cost});
       } catch (error) {
         console.error(error); // tslint:disable-line
         await this.setState({fetching: false});
@@ -1289,130 +1135,9 @@ class App extends React.Component<any, any> {
                   <Alert severity="error">The selected network is currently not supported.</Alert>
               ) : fetching ? (
                   <CircularProgress />
-              ) : connected ? (location.pathname == '/sign' 
-                      ? (
+              ) : connected ? (
                   <Sign queryParams={queryParams} chainId={chainId} address={address} action={this.signMessage}/>
-              ) : section == 1 ? (
-                  <>
-                    <ConfirmationDialog
-                        id="add-wnav"
-                        keepMounted
-                        open={!add_wnav_already_asked && !added_asset}
-                        title={"Add wNAV to Metamask"}
-                        content="Would you like to add wNAV to your wallet's token list?"
-                        onClose={async () => {
-                          this.setState({add_wnav_already_asked: true})
-                          await localforage.setItem('alreadyAskedToAdd', true)
-                        }}
-                        onConfirm={async () => {
-                          this.setState({add_wnav_already_asked: true})
-                          await localforage.setItem('alreadyAskedToAdd', true)
-                          await this.onAddToken()
-                        }}
-                    />
-
-                    <CardContainer>
-                      <AccountAssets chainId={chainId} web3={web3} address={address} assets={assets}
-                                     onRemove={() => {
-                                       dialog_amount.open = true;
-                                       dialog_amount.title = 'Remove tokens from Liquidity Pool';
-                                       dialog_amount.text = 'Indicate the amount of tokens you would like to remove from the liquidity pool'
-                                       dialog_amount.balance = new web3.utils.BN(farmingData.lpUserBalance).toString();
-                                       dialog_amount.token_balance = farmingData.reserves[TOKEN_NAME] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
-                                       dialog_amount.native_balance = farmingData.reserves[getNativeCurrency(chainId).symbol] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
-                                       dialog_amount.button = 'Remove from LP'
-                                       dialog_amount.decimals = 18;
-                                       dialog_amount.result = this.onRemoveLiquidity
-                                       dialog_amount.error_max_0 = 'You have no tokens on the LP!';
-                                       dialog_amount.type = 'remove_liq'
-
-                                       this.setState(dialog_amount);
-                                     }}
-
-                                     onAdd={() => {
-                                       let bal_tok = token_balance;
-                                       let bal_nat = native_balance-1e15;
-
-                                       const getAmountOut = (reserves: any, amount: number, in_: string, out: string) => {
-                                         const amountInWithFee = (new web3.utils.BN(amount)).mul(new web3.utils.BN(9975));
-                                         const numerator = amountInWithFee.mul(new web3.utils.BN(reserves[out]));
-                                         const denominator = (new web3.utils.BN(reserves[in_])).mul(new web3.utils.BN(10000)).add(amountInWithFee);
-                                         const rr = numerator.divRound(denominator);
-                                         return rr;
-                                       }
-
-                                       bal_nat = getAmountOut(farmingData.reserves, bal_tok, TOKEN_NAME, getNativeCurrency(chainId).symbol)
-
-                                       if (new web3.utils.BN(bal_nat).gt(new web3.utils.BN(native_balance)))
-                                       {
-                                         bal_nat = native_balance;
-                                         bal_tok = getAmountOut(farmingData.reserves, native_balance, getNativeCurrency(chainId).symbol, TOKEN_NAME)
-
-                                       }
-
-                                       dialog_amount.open = true;
-                                       dialog_amount.title = 'Add tokens to Liquidity Pool';
-                                       dialog_amount.text = 'Indicate the amount of tokens you would like to add to the liquidity pool'
-                                       dialog_amount.balance = bal_nat.toString();
-                                       dialog_amount.token_balance = bal_tok;
-                                       dialog_amount.native_balance = bal_nat;
-                                       dialog_amount.button = 'Add to LP'
-                                       dialog_amount.decimals = 18;
-                                       dialog_amount.result = this.onAddLiquidity
-                                       dialog_amount.error_max_0 = 'You have no balance to add!';
-                                       dialog_amount.max = 99;
-                                       dialog_amount.type = 'add_liq'
-
-                                       this.setState(dialog_amount);
-                                     }}/>
-                      <LiquidityPoolCard farmingData={farmingData} onAdd={() => {
-                        dialog_amount.open = true;
-                        dialog_amount.title = 'Farm LP tokens';
-                        dialog_amount.text = 'Indicate the amount of LP tokens you would like to farm.'
-                        dialog_amount.balance = new web3.utils.BN(farmingData.lpUserBalance).toString();
-                        dialog_amount.token_balance = farmingData.reserves[TOKEN_NAME] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
-                        dialog_amount.native_balance = farmingData.reserves[getNativeCurrency(chainId).symbol] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
-                        dialog_amount.button = 'Farm'
-                        dialog_amount.decimals = 18;
-                        dialog_amount.result = this.onFarmLpTokens
-                        dialog_amount.error_max_0 = 'You don\'t have any LP token! You need to first add liquidity.';
-                        dialog_amount.max = 100;
-                        dialog_amount.type = 'farm_lp'
-                        this.setState(dialog_amount);
-                      }} onRemove={() => {
-                        dialog_amount.open = true;
-                        dialog_amount.title = 'Remove LP tokens from farming';
-                        dialog_amount.text = 'Indicate the amount of LP tokens you would like to remove from farming'
-                        dialog_amount.balance = new web3.utils.BN(farmingData.lpDepositedBalance).toString();
-                        dialog_amount.token_balance = farmingData.depositedNavLp;
-                        dialog_amount.native_balance = farmingData.depositedBnbLp;
-                        dialog_amount.button = 'Remove from farming'
-                        dialog_amount.decimals = 18;
-                        dialog_amount.result = this.onWithdrawLpTokens
-                        dialog_amount.error_max_0 = 'You are not farming at the moment!';
-                        dialog_amount.max = 100;
-                        dialog_amount.type = 'unfarm_lp'
-
-                        this.setState(dialog_amount);
-                      }} chainId={chainId}/>
-                      <Farming farmingData={farmingData} fetchingFarming={fetching_farming} onWithdrawRewards={this.onWithdrawRewards}/>
-
-                    </CardContainer>
-                  </>
-              ) : section == 2 ? (
-                  <Deposit address={deposit_address} gas_cost={gas_cost} is_registered={is_registered}
-                           onRegister={this.onRegister}/>
-              ) : section == 3 ? (
-                  <Withdraw onWithdraw={this.onWithdraw} validateAddress={this.validateAddress} balance={token_balance}/>
-              ): section == 4 ? fetching_farming ? (
-                      <CircularProgress />
-                  ) : (
-                      <Farming farmingData={farmingData}/>
-                  )
-                  : (
-                      <div>{"Unknown option"}</div>
-                  )
-                ) : (
+              ) : (
                 <>
                 <Grid container spacing={themeOptions.spacing(3)}>
                 <Grid item xs={12}>

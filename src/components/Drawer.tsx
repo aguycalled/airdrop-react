@@ -25,8 +25,6 @@ import AddIcon from '@material-ui/icons/Add';
 import Header from "./Header";
 import FooterBar from "./FooterBar"
 
-const drawerWidth = 200;
-
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
     open?: boolean;
 }>(
@@ -129,54 +127,7 @@ export default function PersistentDrawerLeft(props: any) {
                                        chainId={props.chainId}/>
                 </Toolbar>
             </AppBar>
-            <Drawer
-                sx={{
-                    width: drawerWidth,
-                    flexShrink: 0,
-                    '& .MuiDrawer-paper': {
-                        width: drawerWidth,
-                        boxSizing: 'border-box',
-                    },
-                }}
-                anchor="left"
-                open={open}
-            >
-                <DrawerHeader>
-                    <IconButton onClick={handleDrawerClose}>
-                        {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-                    </IconButton>
-                </DrawerHeader>
-                <Divider />
-                <List>
-                    <ListItem button key={"Overview"} onClick={() => handleClick(1)}>
-                        <ListItemIcon><AccountBalanceIcon /> </ListItemIcon>
-                        <ListItemText primary={"Overview"} />
-                    </ListItem>
-                </List>
-                <Divider />
-                <List>
-                    <ListItem button key={"Deposit"} onClick={() => handleClick(2)}>
-                        <ListItemIcon><CallReceivedIcon /> </ListItemIcon>
-                        <ListItemText primary={"Deposit"} />
-                    </ListItem>
-                    <ListItem button key={"Withdraw"} onClick={() => handleClick(3)}>
-                        <ListItemIcon><CallMadeIcon /> </ListItemIcon>
-                        <ListItemText primary={"Withdraw"} />
-                    </ListItem>
-                </List>
-                { addedAsset ? '' : (
-                    <>
-                        <Divider />
-                        <List>
-                            <ListItem button key={"Add wNAV to Metamask"} onClick={() => handleClick(5)}>
-                                <ListItemIcon><AddIcon /> </ListItemIcon>
-                                <ListItemText primary={"Add wNAV to Metamask"} />
-                            </ListItem>
-                        </List>
-                    </>
-                )}
-            </Drawer>
-            <Main open={open}>
+            <Main>
                 <DrawerHeader />
                 {children}
             </Main>

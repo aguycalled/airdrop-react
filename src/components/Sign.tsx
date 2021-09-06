@@ -9,7 +9,7 @@ import {themeOptions} from "../App";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import {CardHeader} from "@material-ui/core";
-
+import TelegramLoginButton from "./TelegramLogin";
 const Sign = (props: any) => {
     const {address, chainId, queryParams, action} = props;
 
@@ -52,6 +52,11 @@ Your Navcoin Bridge Team.`;
                 <Button variant={"contained"} sx={{mt: '40px'}} onClick={() => {
                     action(message, queryParams.redirect)
                 }}>Sign</Button>
+
+                <TelegramLoginButton dataOnauth={(response: any) => {
+                    console.log(response);
+                }} botName={"NAV_Airdrop_Bot"} />
+
             </CardContent>
         </Card>
     )

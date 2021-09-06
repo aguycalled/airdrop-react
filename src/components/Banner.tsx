@@ -26,7 +26,7 @@ const STitleWrapper = styled('h3')(({ theme }) => ({
 
 const Banner = () => (
   <SBannerWrapper>
-    <STitleWrapper>{`Wrapped Navcoin Bridge`}</STitleWrapper>
+    <STitleWrapper>{`Navcoin Airdrop`}</STitleWrapper>
   </SBannerWrapper>
 );
 
