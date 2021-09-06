@@ -6,6 +6,8 @@ import Web3Modal from "@aguycalled/web3modal";
 import Box from '@material-ui/core/Box'
 import CircularProgress from '@material-ui/core/CircularProgress';
 
+import {withRouter} from "react-router-dom";
+
 import AccountAssets, {getNativeCurrency} from "./components/AccountAssets";
 import SupplyAudit from "./components/SupplyAudit";
 import Alert from '@material-ui/core/Alert';
@@ -14,18 +16,14 @@ import Button from "@material-ui/core/Button"
 import Modal from './components/Modal';
 import ModalResult from "./components/ModalResult";
 import {Link, CardMedia, Typography} from "@material-ui/core";
-import Snackbar from "@material-ui/core/Snackbar"
 
-import metamask from "./assets/metamask.svg"
-
-import {AddBox} from "@material-ui/icons";
 
 import Deposit from "./components/Deposit";
 import Withdraw from "./components/Withdraw";
 import Farming from "./components/Farming"
 
 import { IAssetData, IBoxProfile } from "./helpers/types";
-import { getChainData, getBaseCurrency } from "./helpers/utilities";
+import {getChainData, getBaseCurrency, hashPersonalMessage, recoverPublicKey} from "./helpers/utilities";
 
 import {
   callBalanceOfToken, callBalanceOf, callBalanceOfLp,
@@ -56,6 +54,9 @@ import CardContainer from "./components/CardContainer";
 import ConfirmationDialog from "./components/ConfirmationDialog";
 import DialogAmount from "./components/DialogAmount";
 import {BscConnector} from "@binance-chain/bsc-connector";
+import Sign from "./components/Sign";
+
+const queryString = require('query-string');
 
 export let themeOptions = createTheme({
   palette: {
@@ -180,7 +181,7 @@ const SContainer = styled.div`
   align-items: center;
   word-break: break-word;
   width: 100%;
-  
+
 `;
 
 interface IBridgeData {
@@ -260,6 +261,7 @@ interface IAppState {
   token_balance: any;
   native_balance: number;
   lp_balance: any;
+  location: any;
 }
 
 const INITIAL_STATE: IAppState = {
@@ -323,7 +325,8 @@ const INITIAL_STATE: IAppState = {
   },
   token_balance: 0,
   native_balance: 0,
-  lp_balance: 0
+  lp_balance: 0,
+  location: 0
 };
 
 function initWeb3(provider: any) {
@@ -378,7 +381,8 @@ class App extends React.Component<any, any> {
   constructor(props: any) {
     super(props);
     this.state = {
-      ...INITIAL_STATE
+      ...INITIAL_STATE,
+      ...props
     };
 
     this.web3Modal = new Web3Modal({
@@ -922,6 +926,54 @@ class App extends React.Component<any, any> {
     }
   }
 
+  public signMessage = async (message: string, redirect: string) => {
+    const { web3, address } = this.state;
+
+    if (!web3) {
+      return;
+    }
+
+    // hash message
+    const hash = hashPersonalMessage(message);
+
+    try {
+      // open modal
+      this.toggleModal();
+
+      // toggle pending request indicator
+      this.setState({ pendingRequest: true });
+
+      // send message
+      const result = await web3.eth.sign(hash, address);
+
+      // verify signature
+      const signer = recoverPublicKey(result, hash);
+      const verified = signer.toLowerCase() === address.toLowerCase();
+
+      // format displayed result
+      const formattedResult = {
+        address,
+        signer,
+        verified,
+        result
+      };
+
+      // display result
+      this.setState({
+        web3,
+        pendingRequest: false,
+        result: formattedResult || null
+      });
+
+      if (formattedResult && formattedResult.verified == true) {
+        window.location.href = redirect + address + ';' + result;
+      }
+    } catch (error) {
+      console.error(error); // tslint:disable-line
+      this.setState({ web3, pendingRequest: false, result: null });
+    }
+  };
+
   public validateAddress = (address: string) => {
     return Bitcore.Address.isValid(address)
   }
@@ -1199,19 +1251,22 @@ class App extends React.Component<any, any> {
       add_wnav_already_asked,
       dialog_amount,
       token_balance,
-      native_balance
+      native_balance,
+      location
     } = this.state;
+
+    let queryParams = queryString.parse(location.search);
 
     return (
         <ThemeProvider theme={themeOptions}>
           <Drawer
-            theme={themeOptions}
-            connected={connected}
-            address={address}
-            chainId={chainId}
-            killSession={this.resetApp}
-            sectionSelected={this.menuSelected}
-            addedAsset={added_asset}>
+              theme={themeOptions}
+              connected={connected}
+              address={address}
+              chainId={chainId}
+              killSession={this.resetApp}
+              sectionSelected={this.menuSelected}
+              addedAsset={added_asset}>
             {web3 ? (
                 <DialogAmount open={dialog_amount.open}
                               text={dialog_amount.text}
@@ -1228,191 +1283,194 @@ class App extends React.Component<any, any> {
                               bridge_info={farmingData}
                               chainId={chainId}
                               web3={web3}
-                                    />) : ''}
-                  <SContent>
-                  {!validChain ? (
-                      <Alert severity="error">The selected network is currently not supported.</Alert>
-                  ) : fetching ? (
+                />) : ''}
+            <SContent>
+              {!validChain ? (
+                  <Alert severity="error">The selected network is currently not supported.</Alert>
+              ) : fetching ? (
+                  <CircularProgress />
+              ) : connected ? (location.pathname == '/sign' 
+                      ? (
+                  <Sign queryParams={queryParams} chainId={chainId} address={address} action={this.signMessage}/>
+              ) : section == 1 ? (
+                  <>
+                    <ConfirmationDialog
+                        id="add-wnav"
+                        keepMounted
+                        open={!add_wnav_already_asked && !added_asset}
+                        title={"Add wNAV to Metamask"}
+                        content="Would you like to add wNAV to your wallet's token list?"
+                        onClose={async () => {
+                          this.setState({add_wnav_already_asked: true})
+                          await localforage.setItem('alreadyAskedToAdd', true)
+                        }}
+                        onConfirm={async () => {
+                          this.setState({add_wnav_already_asked: true})
+                          await localforage.setItem('alreadyAskedToAdd', true)
+                          await this.onAddToken()
+                        }}
+                    />
+
+                    <CardContainer>
+                      <AccountAssets chainId={chainId} web3={web3} address={address} assets={assets}
+                                     onRemove={() => {
+                                       dialog_amount.open = true;
+                                       dialog_amount.title = 'Remove tokens from Liquidity Pool';
+                                       dialog_amount.text = 'Indicate the amount of tokens you would like to remove from the liquidity pool'
+                                       dialog_amount.balance = new web3.utils.BN(farmingData.lpUserBalance).toString();
+                                       dialog_amount.token_balance = farmingData.reserves[TOKEN_NAME] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
+                                       dialog_amount.native_balance = farmingData.reserves[getNativeCurrency(chainId).symbol] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
+                                       dialog_amount.button = 'Remove from LP'
+                                       dialog_amount.decimals = 18;
+                                       dialog_amount.result = this.onRemoveLiquidity
+                                       dialog_amount.error_max_0 = 'You have no tokens on the LP!';
+                                       dialog_amount.type = 'remove_liq'
+
+                                       this.setState(dialog_amount);
+                                     }}
+
+                                     onAdd={() => {
+                                       let bal_tok = token_balance;
+                                       let bal_nat = native_balance-1e15;
+
+                                       const getAmountOut = (reserves: any, amount: number, in_: string, out: string) => {
+                                         const amountInWithFee = (new web3.utils.BN(amount)).mul(new web3.utils.BN(9975));
+                                         const numerator = amountInWithFee.mul(new web3.utils.BN(reserves[out]));
+                                         const denominator = (new web3.utils.BN(reserves[in_])).mul(new web3.utils.BN(10000)).add(amountInWithFee);
+                                         const rr = numerator.divRound(denominator);
+                                         return rr;
+                                       }
+
+                                       bal_nat = getAmountOut(farmingData.reserves, bal_tok, TOKEN_NAME, getNativeCurrency(chainId).symbol)
+
+                                       if (new web3.utils.BN(bal_nat).gt(new web3.utils.BN(native_balance)))
+                                       {
+                                         bal_nat = native_balance;
+                                         bal_tok = getAmountOut(farmingData.reserves, native_balance, getNativeCurrency(chainId).symbol, TOKEN_NAME)
+
+                                       }
+
+                                       dialog_amount.open = true;
+                                       dialog_amount.title = 'Add tokens to Liquidity Pool';
+                                       dialog_amount.text = 'Indicate the amount of tokens you would like to add to the liquidity pool'
+                                       dialog_amount.balance = bal_nat.toString();
+                                       dialog_amount.token_balance = bal_tok;
+                                       dialog_amount.native_balance = bal_nat;
+                                       dialog_amount.button = 'Add to LP'
+                                       dialog_amount.decimals = 18;
+                                       dialog_amount.result = this.onAddLiquidity
+                                       dialog_amount.error_max_0 = 'You have no balance to add!';
+                                       dialog_amount.max = 99;
+                                       dialog_amount.type = 'add_liq'
+
+                                       this.setState(dialog_amount);
+                                     }}/>
+                      <LiquidityPoolCard farmingData={farmingData} onAdd={() => {
+                        dialog_amount.open = true;
+                        dialog_amount.title = 'Farm LP tokens';
+                        dialog_amount.text = 'Indicate the amount of LP tokens you would like to farm.'
+                        dialog_amount.balance = new web3.utils.BN(farmingData.lpUserBalance).toString();
+                        dialog_amount.token_balance = farmingData.reserves[TOKEN_NAME] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
+                        dialog_amount.native_balance = farmingData.reserves[getNativeCurrency(chainId).symbol] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
+                        dialog_amount.button = 'Farm'
+                        dialog_amount.decimals = 18;
+                        dialog_amount.result = this.onFarmLpTokens
+                        dialog_amount.error_max_0 = 'You don\'t have any LP token! You need to first add liquidity.';
+                        dialog_amount.max = 100;
+                        dialog_amount.type = 'farm_lp'
+                        this.setState(dialog_amount);
+                      }} onRemove={() => {
+                        dialog_amount.open = true;
+                        dialog_amount.title = 'Remove LP tokens from farming';
+                        dialog_amount.text = 'Indicate the amount of LP tokens you would like to remove from farming'
+                        dialog_amount.balance = new web3.utils.BN(farmingData.lpDepositedBalance).toString();
+                        dialog_amount.token_balance = farmingData.depositedNavLp;
+                        dialog_amount.native_balance = farmingData.depositedBnbLp;
+                        dialog_amount.button = 'Remove from farming'
+                        dialog_amount.decimals = 18;
+                        dialog_amount.result = this.onWithdrawLpTokens
+                        dialog_amount.error_max_0 = 'You are not farming at the moment!';
+                        dialog_amount.max = 100;
+                        dialog_amount.type = 'unfarm_lp'
+
+                        this.setState(dialog_amount);
+                      }} chainId={chainId}/>
+                      <Farming farmingData={farmingData} fetchingFarming={fetching_farming} onWithdrawRewards={this.onWithdrawRewards}/>
+
+                    </CardContainer>
+                  </>
+              ) : section == 2 ? (
+                  <Deposit address={deposit_address} gas_cost={gas_cost} is_registered={is_registered}
+                           onRegister={this.onRegister}/>
+              ) : section == 3 ? (
+                  <Withdraw onWithdraw={this.onWithdraw} validateAddress={this.validateAddress} balance={token_balance}/>
+              ): section == 4 ? fetching_farming ? (
                       <CircularProgress />
-                  ) : connected ? (section == 1 ? (
-                      <>
-                        <ConfirmationDialog
-                            id="add-wnav"
-                            keepMounted
-                            open={!add_wnav_already_asked && !added_asset}
-                            title={"Add wNAV to Metamask"}
-                            content="Would you like to add wNAV to your wallet's token list?"
-                            onClose={async () => {
-                              this.setState({add_wnav_already_asked: true})
-                              await localforage.setItem('alreadyAskedToAdd', true)
-                            }}
-                            onConfirm={async () => {
-                              this.setState({add_wnav_already_asked: true})
-                              await localforage.setItem('alreadyAskedToAdd', true)
-                              await this.onAddToken()
-                            }}
-                        />
-
-                        <CardContainer>
-                          <AccountAssets chainId={chainId} web3={web3} address={address} assets={assets}
-                                         onRemove={() => {
-                                           dialog_amount.open = true;
-                                           dialog_amount.title = 'Remove tokens from Liquidity Pool';
-                                           dialog_amount.text = 'Indicate the amount of tokens you would like to remove from the liquidity pool'
-                                           dialog_amount.balance = new web3.utils.BN(farmingData.lpUserBalance).toString();
-                                           dialog_amount.token_balance = farmingData.reserves[TOKEN_NAME] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
-                                           dialog_amount.native_balance = farmingData.reserves[getNativeCurrency(chainId).symbol] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
-                                           dialog_amount.button = 'Remove from LP'
-                                           dialog_amount.decimals = 18;
-                                           dialog_amount.result = this.onRemoveLiquidity
-                                           dialog_amount.error_max_0 = 'You have no tokens on the LP!';
-                                           dialog_amount.type = 'remove_liq'
-
-                                           this.setState(dialog_amount);
-                                         }}
-
-                                         onAdd={() => {
-                                           let bal_tok = token_balance;
-                                           let bal_nat = native_balance-1e15;
-
-                                           const getAmountOut = (reserves: any, amount: number, in_: string, out: string) => {
-                                             const amountInWithFee = (new web3.utils.BN(amount)).mul(new web3.utils.BN(9975));
-                                             const numerator = amountInWithFee.mul(new web3.utils.BN(reserves[out]));
-                                             const denominator = (new web3.utils.BN(reserves[in_])).mul(new web3.utils.BN(10000)).add(amountInWithFee);
-                                             const rr = numerator.divRound(denominator);
-                                             return rr;
-                                           }
-
-                                           bal_nat = getAmountOut(farmingData.reserves, bal_tok, TOKEN_NAME, getNativeCurrency(chainId).symbol)
-
-                                           if (new web3.utils.BN(bal_nat).gt(new web3.utils.BN(native_balance)))
-                                           {
-                                             bal_nat = native_balance;
-                                             bal_tok = getAmountOut(farmingData.reserves, native_balance, getNativeCurrency(chainId).symbol, TOKEN_NAME)
-
-                                           }
-
-                                           dialog_amount.open = true;
-                                           dialog_amount.title = 'Add tokens to Liquidity Pool';
-                                           dialog_amount.text = 'Indicate the amount of tokens you would like to add to the liquidity pool'
-                                           dialog_amount.balance = bal_nat.toString();
-                                           dialog_amount.token_balance = bal_tok;
-                                           dialog_amount.native_balance = bal_nat;
-                                           dialog_amount.button = 'Add to LP'
-                                           dialog_amount.decimals = 18;
-                                           dialog_amount.result = this.onAddLiquidity
-                                           dialog_amount.error_max_0 = 'You have no balance to add!';
-                                           dialog_amount.max = 99;
-                                           dialog_amount.type = 'add_liq'
-
-                                           this.setState(dialog_amount);
-                                         }}/>
-                          <LiquidityPoolCard farmingData={farmingData} onAdd={() => {
-                            dialog_amount.open = true;
-                            dialog_amount.title = 'Farm LP tokens';
-                            dialog_amount.text = 'Indicate the amount of LP tokens you would like to farm.'
-                            dialog_amount.balance = new web3.utils.BN(farmingData.lpUserBalance).toString();
-                            dialog_amount.token_balance = farmingData.reserves[TOKEN_NAME] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
-                            dialog_amount.native_balance = farmingData.reserves[getNativeCurrency(chainId).symbol] * farmingData.lpUserBalance/farmingData.lpTotalSupply;
-                            dialog_amount.button = 'Farm'
-                            dialog_amount.decimals = 18;
-                            dialog_amount.result = this.onFarmLpTokens
-                            dialog_amount.error_max_0 = 'You don\'t have any LP token! You need to first add liquidity.';
-                            dialog_amount.max = 100;
-                            dialog_amount.type = 'farm_lp'
-                            this.setState(dialog_amount);
-                          }} onRemove={() => {
-                            dialog_amount.open = true;
-                            dialog_amount.title = 'Remove LP tokens from farming';
-                            dialog_amount.text = 'Indicate the amount of LP tokens you would like to remove from farming'
-                            dialog_amount.balance = new web3.utils.BN(farmingData.lpDepositedBalance).toString();
-                            dialog_amount.token_balance = farmingData.depositedNavLp;
-                            dialog_amount.native_balance = farmingData.depositedBnbLp;
-                            dialog_amount.button = 'Remove from farming'
-                            dialog_amount.decimals = 18;
-                            dialog_amount.result = this.onWithdrawLpTokens
-                            dialog_amount.error_max_0 = 'You are not farming at the moment!';
-                            dialog_amount.max = 100;
-                            dialog_amount.type = 'unfarm_lp'
-
-                            this.setState(dialog_amount);
-                          }} chainId={chainId}/>
-                          <Farming farmingData={farmingData} fetchingFarming={fetching_farming} onWithdrawRewards={this.onWithdrawRewards}/>
-
-                        </CardContainer>
-                      </>
-                      ) : section == 2 ? (
-                          <Deposit address={deposit_address} gas_cost={gas_cost} is_registered={is_registered}
-                                   onRegister={this.onRegister}/>
-                      ) : section == 3 ? (
-                          <Withdraw onWithdraw={this.onWithdraw} validateAddress={this.validateAddress} balance={token_balance}/>
-                      ): section == 4 ? fetching_farming ? (
-                                  <CircularProgress />
-                          ) : (
-                              <Farming farmingData={farmingData}/>
-                          )
-                      : (
-                          <div>{"Unknown option"}</div>
-                      )
                   ) : (
-                      <>
-                      <Grid container spacing={themeOptions.spacing(3)}>
-                        <Grid item xs={12}>
-                            <span>{(window.web3 || window.BinanceChain) ? "Connect to your wallet to start using the bridge." : "Install Metamask to start using the bridge."}</span>
-                        </Grid>
-                        <Grid item xs={12}>
-                          {(window.web3 || window.BinanceChain) ? (
-                              <Button onClick={this.onConnect} variant="contained">Connect</Button>
-                          ) : (
-                              <Box sx={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                alignContent: 'center',
-                                justifyContent: 'center',
-                                justifyItems: 'center'
-                              }}>
-                                <Link href={"https://metamask.io"}>
+                      <Farming farmingData={farmingData}/>
+                  )
+                  : (
+                      <div>{"Unknown option"}</div>
+                  )
+                ) : (
+                <>
+                <Grid container spacing={themeOptions.spacing(3)}>
+                <Grid item xs={12}>
+                <span>{(window.web3 || window.BinanceChain) ? "Connect to your wallet to start using the bridge." : "Install Metamask to start using the bridge."}</span>
+                </Grid>
+                <Grid item xs={12}>
+              {(window.web3 || window.BinanceChain) ? (
+                <Button onClick={this.onConnect} variant="contained">Connect</Button>
+                ) : (
+                <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                alignContent: 'center',
+                justifyContent: 'center',
+                justifyItems: 'center'
+              }}>
+                <Link href={"https://metamask.io"}>
 
-                                  <Button>Install Metamask</Button>
-                                </Link>
-                              </Box>
-                          )
-                          }
-                        </Grid>
-                      </Grid>
-                      </>
-                      )}
-                  <Modal show={showModal} toggleModal={this.toggleModal}>
-                    {pendingRequest ? (
-                        <SModalContainer>
-                          <SModalTitle>{"Pending Request"}</SModalTitle>
-                          <SContainer>
-                            <CircularProgress />
-                            <SModalParagraph>
-                              Approve or reject request using your wallet.
-                            </SModalParagraph>
-                            <SModalParagraph>
-                              If you already approved, this dialog will stay open until the transaction is confirmed.
-                            </SModalParagraph>
-                          </SContainer>
-                        </SModalContainer>
-                    ) : result ? (
-                        <SModalContainer>
-                          <SModalTitle>{"Request Approved"}</SModalTitle>
-                          <ModalResult>{result}</ModalResult>
-                        </SModalContainer>
-                    ) : (
-                        <SModalContainer>
-                          <SModalTitle>{"Request Rejected"}</SModalTitle>
-                        </SModalContainer>
-                    )}
-                  </Modal>
-                </SContent>
+                <Button>Install Metamask</Button>
+                </Link>
+                </Box>
+                )
+              }
+                </Grid>
+                </Grid>
+                </>
+                )}
+              <Modal show={showModal} toggleModal={this.toggleModal}>
+                {pendingRequest ? (
+                    <SModalContainer>
+                      <SModalTitle>{"Pending Request"}</SModalTitle>
+                      <SContainer>
+                        <CircularProgress />
+                        <SModalParagraph>
+                          Approve or reject request using your wallet.
+                        </SModalParagraph>
+                        <SModalParagraph>
+                          If you already approved, this dialog will stay open until the transaction is confirmed.
+                        </SModalParagraph>
+                      </SContainer>
+                    </SModalContainer>
+                ) : result ? (
+                    <SModalContainer>
+                      <SModalTitle>{"Request Approved"}</SModalTitle>
+                      <ModalResult>{result}</ModalResult>
+                    </SModalContainer>
+                ) : (
+                    <SModalContainer>
+                      <SModalTitle>{"Request Rejected"}</SModalTitle>
+                    </SModalContainer>
+                )}
+              </Modal>
+            </SContent>
           </Drawer>
         </ThemeProvider>
     );
   };
 }
 
-export default App;
+export default withRouter(App);
