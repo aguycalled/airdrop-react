@@ -44,7 +44,7 @@ Your Navcoin Bridge Team.`;
 
 
                     {message.split('\n').map ((line) =>
-                        (<Typography variant={"subtitle2"} sx={{mb:'20px'}}>
+                        (<Typography variant={"overline"} sx={{display: 'block'}}>
                             {line}
                         </Typography>)
                     )}
