@@ -10,6 +10,7 @@ import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import {CardHeader} from "@material-ui/core";
 import TelegramLoginButton from "./TelegramLogin";
+import TwitterLogin from "react-twitter-auth";
 const Sign = (props: any) => {
     const {address, chainId, queryParams, action} = props;
 
@@ -43,11 +44,11 @@ Your Navcoin Bridge Team.`;
                 </Typography>
 
 
-                    {message.split('\n').map ((line) =>
-                        (<Typography variant={"overline"} sx={{display: 'block'}}>
-                            {line}
-                        </Typography>)
-                    )}
+                {message.split('\n').map ((line) =>
+                    (<Typography variant={"overline"} sx={{display: 'block'}}>
+                        {line}
+                    </Typography>)
+                )}
 
                 <Button variant={"contained"} sx={{mt: '40px'}} onClick={() => {
                     action(message, queryParams.redirect)
@@ -56,6 +57,19 @@ Your Navcoin Bridge Team.`;
                 <TelegramLoginButton dataOnauth={(response: any) => {
                     console.log(response);
                 }} botName={"NAV_Airdrop_Bot"} />
+
+                <TwitterLogin
+                    loginUrl="http://airdrop-api.nav.community/api/v1/auth/twitter"
+                    onFailure={(error: any) => {
+                        alert(error);
+                    }}
+                    onSuccess={(response: any) => {
+                        response.json().then((body: any) => {
+                            alert(JSON.stringify(body));
+                        });
+                    }}
+                    requestTokenUrl="http://airdrop-api.nav.community/api/v1/auth/twitter/reverse"
+                />
 
             </CardContent>
         </Card>

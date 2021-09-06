@@ -13,6 +13,7 @@
     "@material-ui/icons": "^5.0.0-beta.4",
     "@types/pouchdb": "^6.4.0",
     "@types/react-dom": "^17.0.9",
+    "@types/react-twitter-auth": "0.0.2",
     "@walletconnect/utils": "^1.6.0",
     "bitcore-lib": "github:aguycalled/bitcore-lib",
     "clsx": "^1.1.1",
@@ -29,6 +30,7 @@
     "react-router-dom": "^5.2.1",
     "react-scripts": "4.0.3",
     "react-telegram-login": "^1.1.2",
+    "react-twitter-auth": "0.0.13",
     "typescript": "^4.3.5",
     "web-vitals": "^1.0.1",
     "web3": "^1.5.1"
