@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const serverless = require('serverless-http');
 
+require('dotenv').config({ path: __dirname+'/.env' });
+
 const app = express();
 const port = 3000;
 const oauthCallback=process.env.FRONTEND_URL;

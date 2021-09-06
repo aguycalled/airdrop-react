@@ -1,7 +1,8 @@
 {
-  "name": "wnav-react",
+  "name": "airdrop-react",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:3000",
   "dependencies": {
     "@aguycalled/web3modal": "^1.9.7",
     "@binance-chain/bsc-connector": "^1.0.0",
