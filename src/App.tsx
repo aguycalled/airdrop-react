@@ -403,7 +403,7 @@ class App extends React.Component<any, any> {
   }
 
   public onConnect = async () => {
-    if (!(window.web3 || window.BinanceChain)) return;
+    if (!(window.web3 || window.ethereum || window.BinanceChain)) return;
 
     const provider = await this.web3Modal.connect();
 
@@ -1416,10 +1416,10 @@ class App extends React.Component<any, any> {
                 <>
                 <Grid container spacing={themeOptions.spacing(3)}>
                 <Grid item xs={12}>
-                <span>{(window.web3 || window.BinanceChain) ? "Connect to your wallet to start using the bridge." : "Install Metamask to start using the bridge."}</span>
+                <span>{(window.web3 || window.ethereum || window.BinanceChain) ? "Connect to your wallet to start using the bridge." : "Install Metamask to start using the bridge."}</span>
                 </Grid>
                 <Grid item xs={12}>
-              {(window.web3 || window.BinanceChain) ? (
+              {(window.web3 || window.ethereum || window.BinanceChain) ? (
                 <Button onClick={this.onConnect} variant="contained">Connect</Button>
                 ) : (
                 <Box sx={{
