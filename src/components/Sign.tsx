@@ -59,7 +59,7 @@ Your Navcoin Bridge Team.`;
                 }} botName={"NAV_Airdrop_Bot"} />
 
                 <TwitterLogin
-                    loginUrl="https://airdrop-api.nav.community/api/v1/auth/twitter"
+                    loginUrl="https://airdrop.nav.community/api/v1/auth/twitter"
                     onFailure={(error: any) => {
                         alert(error);
                     }}
@@ -68,7 +68,7 @@ Your Navcoin Bridge Team.`;
                             alert(JSON.stringify(body));
                         });
                     }}
-                    requestTokenUrl="https://airdrop-api.nav.community/api/v1/auth/twitter/reverse"
+                    requestTokenUrl="https://airdrop.nav.community/api/v1/auth/twitter/reverse"
                 />
 
             </CardContent>
