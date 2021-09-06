@@ -99,7 +99,7 @@ function TwitterLogin() {
             <div>Name: {name}</div>
             <div>URL: {url}</div>
             <div>Status: {status}</div>
-            <button className='signout-btn' onClick={logout}>Sign Out</button>
+            <Button onClick={logout}>Disconnect from Twitter</Button>
         </div>
     );
 }
@@ -107,8 +107,6 @@ function TwitterLogin() {
 
 const Sign = (props: any) => {
     const {address, chainId, queryParams, action} = props;
-
-    window.history.replaceState(null, "Navcoin Bridge", "/")
 
     let message = `Hi!
 

@@ -128,7 +128,6 @@ export let themeOptions = createTheme({
 themeOptions.spacing(10);
 themeOptions= responsiveFontSizes(themeOptions);
 
-const ElectrumClient = require("electrum-client-js");
 const Bitcore = require("bitcore-lib")
 const Binance = require('node-binance-api');
 
@@ -368,7 +367,6 @@ class App extends React.Component<any, any> {
   // @ts-ignore
   public web3Modal: Web3Modal;
   public state: IAppState;
-  public electrumClient: any;
   public binance: any;
 
   constructor(props: any) {
@@ -385,8 +383,6 @@ class App extends React.Component<any, any> {
     });
 
     this.binance = new Binance()
-
-    this.electrumClient = new ElectrumClient(ELECTRUM_CONFIG.host, ELECTRUM_CONFIG.port, ELECTRUM_CONFIG.proto)
   }
 
   public componentDidMount() {
@@ -399,8 +395,6 @@ class App extends React.Component<any, any> {
     if (!(window.web3 || window.ethereum || window.BinanceChain)) return;
 
     const provider = await this.web3Modal.connect();
-
-    await this.electrumClient.connect();
 
     await this.subscribeProvider(provider);
 
