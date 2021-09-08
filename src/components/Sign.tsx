@@ -3,11 +3,12 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
-import {CardHeader} from "@material-ui/core";
+import {Box, CardHeader, CardMedia, Grid} from "@material-ui/core";
 import TelegramLoginButton from "./TelegramLogin";
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 import queryString from 'query-string';
+import logo from "../assets/logo.png"
 
 const apiPath = '/api';
 
@@ -92,14 +93,10 @@ function TwitterLogin() {
     }, []);
 
     return !isLoggedIn ? (
-        <Button onClick={login}>Connect with Twitter</Button>
+        <Button onClick={login} variant={"contained"}>Connect with Twitter</Button>
     ): (
         <div>
-            <div><img alt='User profile' src={imageUrl}/></div>
-            <div>Name: {name}</div>
-            <div>URL: {url}</div>
-            <div>Status: {status}</div>
-            <Button onClick={logout}>Disconnect from Twitter</Button>
+            <Button onClick={logout} variant={"contained"}>Disconnect {name}</Button>
         </div>
     );
 }
@@ -125,18 +122,48 @@ Your Navcoin Bridge Team.`;
             margin: '10px', padding: '20px', width: '90%', maxWidth: '600px', height: '90%'
         }
         }>
-            <CardHeader title={"Sign message "} subheader={"Authenticate your address"}/>
+            <Box sx={{display:'flex', alignItems: 'center', justifyContent: 'center'}}>
+                <img src={logo} style={{height: 140, width: 140}}/>
+            </Box>
+            <CardHeader title={"Navcoin Airdrop"} subheader={"Verify your accounts to participate!"}/>
             <CardContent>
-                <Button variant={"contained"} sx={{mt: '40px'}} onClick={() => {
-                    action(message, queryParams.redirect)
-                }}>Sign</Button>
+                <Grid container spacing={2}>
 
-                <TelegramLoginButton dataOnauth={(response: any) => {
-                    console.log(response);
-                }} botName={"NAV_Airdrop_Bot"} />
+                    <Grid item xs={6} sx={{wordBreak: 'break-word', mt: '40px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'flex-end'}}>
+                        <Typography variant="caption" align={'right'}>
+                        Your address {address}
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={6} sx={{display: 'flex', mt: '40px', alignItems: 'center', justifyContent: 'flex-start'}}>
 
-                <TwitterLogin/>
+                        <Button variant={"contained"} onClick={() => {
+                            action(message, queryParams.redirect)
+                        }}>Verify</Button>
+                    </Grid>
 
+                    <Grid item xs={6} sx={{wordBreak: 'break-word', mt: '40px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'flex-end'}}>
+                        <Typography variant="caption" align={'right'}>
+                        Your Telegram account
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={6}  sx={{display: 'flex', mt: '40px', alignItems: 'center', justifyContent: 'flex-start'}}>
+                        <TelegramLoginButton dataOnauth={(response: any) => {
+                            console.log(response);
+                        }} botName={"NAV_Airdrop_Bot"} />
+                    </Grid>
+
+                    <Grid item xs={6} sx={{wordBreak: 'break-word', mt: '40px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'flex-end'}}>
+                        <Typography variant="caption" align={'right'}>
+                        Your Twitter account
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={6}  sx={{display: 'flex', mt: '40px', alignItems: 'center', justifyContent: 'flex-start'}}>
+                    <TwitterLogin/>
+                    </Grid>
+                </Grid>
             </CardContent>
         </Card>
     )

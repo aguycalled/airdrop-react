@@ -25,70 +25,19 @@ import AddIcon from '@material-ui/icons/Add';
 import Header from "./Header";
 import FooterBar from "./FooterBar"
 
-const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
-    open?: boolean;
-}>(
-    ({ theme, open }) => ({
-        flexGrow: 1,
-        transition: theme.transitions.create('margin', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-        }),
-        ...(open && {
-            transition: theme.transitions.create('margin', {
-                easing: theme.transitions.easing.easeOut,
-                duration: theme.transitions.duration.enteringScreen,
-            }),
-        }),
+const Main = styled('main')(({ theme }) => ({
         height: '100vh',
         paddingBottom: '130px',
-    }),
+    })
 );
 
-const AppBar = styled(MuiAppBar, {
-    shouldForwardProp: (prop) => prop !== 'open',
-})<{
-    open?: boolean;
-}>(({ theme, open }) => ({
-    transition: theme.transitions.create(['margin', 'width'], {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-    }),
-    ...(open && {
-        transition: theme.transitions.create(['margin', 'width'], {
-            easing: theme.transitions.easing.easeOut,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
-    })
-}));
 
-const DrawerHeader = styled('div')(({ theme }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    padding: theme.spacing(0, 1),
-    // necessary for content to be below app bar
-    ...theme.mixins.toolbar,
-    justifyContent: 'flex-end',
-}));
-
-const Footer = styled('div', { shouldForwardProp: (prop) => prop !== 'open' })<{
-    open?: boolean;
-}>(({ theme , open}) => ({
-    transition: theme.transitions.create(['margin', 'width'], {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-    }),
-    ...(open && {
-        transition: theme.transitions.create(['margin', 'width'], {
-            easing: theme.transitions.easing.easeOut,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
-    }),
+const Footer = styled('div')(({ theme }) => ({
     display: 'flex',
     position: 'fixed',
-    top: 'auto',
-    bottom: 0,
-    width: '100%'}))
+    top: '0',
+    bottom: 'auto',
+    width: '100%'}));
 
 export default function PersistentDrawerLeft(props: any) {
     const { window, theme, children, addedAsset } = props;
@@ -110,33 +59,16 @@ export default function PersistentDrawerLeft(props: any) {
     return (
         <>
             <CssBaseline />
-            <AppBar position="fixed" open={open}>
-                <Toolbar>
-                    <IconButton
-                        color="inherit"
-                        aria-label="open drawer"
-                        onClick={handleDrawerOpen}
-                        edge="start"
-                        sx={{ mr: 2 }}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Header killSession={props.killSession}
-                                       connected={props.connected}
-                                       address={props.address}
-                                       chainId={props.chainId}/>
-                </Toolbar>
-            </AppBar>
-            <Main>
-                <DrawerHeader />
-                {children}
-            </Main>
             <Footer>
                 <FooterBar killSession={props.killSession}
-                               connected={props.connected}
-                               address={props.address}
-                               chainId={props.chainId}/>
+                           connected={props.connected}
+                           address={props.address}
+                           chainId={props.chainId}/>
             </Footer>
+            <Main>
+                {children}
+            </Main>
+
 
         </>
 

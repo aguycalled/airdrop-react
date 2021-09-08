@@ -14,8 +14,8 @@ import clsx from "clsx";
 import {makeStyles, useTheme} from "@material-ui/core/styles";
 
 const SHeader = styled.div`
-  margin-top: -1px;
-  margin-bottom: 1px;
+  margin-top: 1px;
+  margin-bottom: -1px;
   width: 100%;
   display: flex;
   align-items: center;
