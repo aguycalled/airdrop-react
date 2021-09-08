@@ -127,21 +127,6 @@ Your Navcoin Bridge Team.`;
         }>
             <CardHeader title={"Sign message "} subheader={"Authenticate your address"}/>
             <CardContent>
-                <Typography variant={"subtitle1"} sx={{
-                    paddingTop: '20px',
-                    paddingBottom: '40px',
-                    wordBreak: 'break-all'
-                }}>
-                    The following message will be signed by<br/><b>{address}</b>:
-                </Typography>
-
-
-                {message.split('\n').map ((line) =>
-                    (<Typography variant={"overline"} sx={{display: 'block'}}>
-                        {line}
-                    </Typography>)
-                )}
-
                 <Button variant={"contained"} sx={{mt: '40px'}} onClick={() => {
                     action(message, queryParams.redirect)
                 }}>Sign</Button>
